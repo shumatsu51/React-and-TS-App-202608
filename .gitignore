@@ -1,0 +1,48 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+.vite/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Docker
+*.pid
+
+# AWS CDK
+cdk/cdk.out/
+cdk/.cdk.staging/
+# AWS アカウントID等、デプロイ環境固有の情報が入るため各自のローカルでのみ生成する
+cdk/cdk.context.json
+
+# Coverage
+coverage/
+
+# Test
+.vitest/
