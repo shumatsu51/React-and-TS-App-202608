@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import auth from "./routes/auth.js";
 import health from "./routes/health.js";
+import dbHealth from "./routes/db-health.js";
 
 const app = new Hono();
 
@@ -21,6 +22,7 @@ app.use(
 // ルーターを登録
 app.route("/api/auth", auth);
 app.route("/api/health", health);
+app.route("/api/db-health", dbHealth);
 
 // サーバーの起動
 const port = Number(process.env.PORT ?? 3000);
