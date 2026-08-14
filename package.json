@@ -6,5 +6,9 @@
     "lint:fix": "npm run lint:fix --prefix backend && npm run lint:fix --prefix frontend",
     "format": "npm run format --prefix backend && npm run format --prefix frontend",
     "format:check": "npm run format:check --prefix backend && npm run format:check --prefix frontend"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@types/jest": "^30.0.0"
   }
 }
