@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { TripCard } from "../components/TripCard";
 
 export type Trip = {
@@ -14,6 +15,8 @@ export default function TripListPages() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -68,6 +71,12 @@ export default function TripListPages() {
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <button
+        className="grid border px-4 py-4 hover:bg-gray-200 text-center text-red-500 bg-gray-100 rounded-md"
+        onClick={() => navigate("/trips/new")}
+      >
+        +旅行を作成
+      </button>
       {trips.map((trip) => (
         <TripCard key={trip.id} trip={trip} />
       ))}
