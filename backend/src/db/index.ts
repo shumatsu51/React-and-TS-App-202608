@@ -9,6 +9,7 @@ export const pool = mysql.createPool({
   password: process.env.DATABASE_PASSWORD ?? "apppassword",
   waitForConnections: true,
   connectionLimit: 10,
+  dateStrings: true,
 });
 
 // pool.on('connection') は新しい TCP 接続が確立されたタイミングで発火する。
