@@ -3,8 +3,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import auth from "./routes/auth.js";
 import health from "./routes/health.js";
-import pool from "./db/index.js";
 import dbHealth from "./routes/db-health.js";
+import trips from "./routes/trips.js";
 
 const app = new Hono();
 
@@ -20,39 +20,11 @@ app.use(
   })
 );
 
-app.get("/api/trips", async (c) => {
-  try {
-    const [rows] = await pool.query(
-      `
-      SELECT
-        id,
-        user_id,
-        title,
-        start_date,
-        end_date,
-        description
-      FROM trips
-      ORDER BY start_date
-      `
-    );
-
-    return c.json(rows);
-  } catch (error) {
-    console.error(error);
-
-    return c.json(
-      {
-        message: "Failed to fetch trips",
-      },
-      500
-    );
-  }
-});
-
 // ルーターを登録
 app.route("/api/auth", auth);
 app.route("/api/health", health);
 app.route("/api/db-health", dbHealth);
+app.route("/api/trips", trips);
 
 // サーバーの起動
 const port = Number(process.env.PORT ?? 3000);

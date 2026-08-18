@@ -1,0 +1,128 @@
+import { Hono } from "hono";
+import mysql from "mysql2/promise";
+
+import pool from "../db/index.js";
+import { requireAuth, type AuthEnv } from "../middleware/auth.js";
+
+const trips = new Hono<AuthEnv>();
+
+// ログイン必須
+trips.use("/*", requireAuth);
+
+// GET /api/trips
+trips.get("/", async (c) => {
+  try {
+    const user = c.get("user");
+    const userId = Number(user.sub);
+
+    const [rows] = await pool.query<mysql.RowDataPacket[]>(
+      `
+      SELECT
+        id,
+        user_id,
+        title,
+        start_date,
+        end_date,
+        description
+      FROM trips
+      WHERE user_id = ?
+      ORDER BY start_date
+      `,
+      [userId]
+    );
+
+    return c.json(rows);
+  } catch (error) {
+    console.error(error);
+
+    return c.json(
+      {
+        message: "Failed to fetch trips",
+      },
+      500
+    );
+  }
+});
+
+// POST /api/trips
+trips.post("/", async (c) => {
+  try {
+    const user = c.get("user");
+    const userId = Number(user.sub);
+
+    const body = await c.req.json();
+
+    const { title, start_date, end_date, description } = body;
+
+    // 必須チェック
+    if (!title?.trim() || !start_date || !end_date) {
+      return c.json(
+        {
+          message: "必須項目が入力されていません",
+        },
+        400
+      );
+    }
+
+    const start = new Date(`${start_date}T00:00:00`);
+    const end = new Date(`${end_date}T00:00:00`);
+
+    // 終了日が開始日より前
+    if (end < start) {
+      return c.json(
+        {
+          message: "終了日は開始日以降の日付を設定してください",
+        },
+        400
+      );
+    }
+
+    const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24) + 1;
+
+    if (diffDays > 7) {
+      return c.json(
+        {
+          message: "旅行期間は7日間以内に収まるように設定してください",
+        },
+        400
+      );
+    }
+
+    const [result] = await pool.query<mysql.ResultSetHeader>(
+      `
+      INSERT INTO trips (
+        user_id,
+        title,
+        start_date,
+        end_date,
+        description
+      )
+      VALUES (?, ?, ?, ?, ?)
+      `,
+      [userId, title.trim(), start_date, end_date, description?.trim() || null]
+    );
+
+    return c.json(
+      {
+        id: result.insertId,
+        user_id: userId,
+        title: title.trim(),
+        start_date,
+        end_date,
+        description: description?.trim() || null,
+      },
+      201
+    );
+  } catch (error) {
+    console.error(error);
+
+    return c.json(
+      {
+        message: "Failed to create trip",
+      },
+      500
+    );
+  }
+});
+
+export default trips;
