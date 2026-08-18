@@ -21,7 +21,9 @@ export default function TripListPages() {
   useEffect(() => {
     const fetchTrips = async () => {
       try {
-        const response = await fetch("/api/trips");
+        const response = await fetch("/api/trips", {
+          credentials: "include",
+        });
 
         if (!response.ok) {
           throw new Error("旅行一覧の取得に失敗しました");

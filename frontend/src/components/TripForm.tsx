@@ -1,5 +1,8 @@
 import { type ChangeEvent, type FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+
+type TripFormProps = {
+  onSuccess: () => void;
+};
 
 type FormErrors = {
   title?: string;
@@ -8,17 +11,15 @@ type FormErrors = {
   tripPeriod?: string;
 };
 
-export const TripForm = () => {
+export const TripForm = ({ onSuccess }: TripFormProps) => {
   const [title, setTitle] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
 
   const [errors, setErrors] = useState<FormErrors>({});
-  // const [isSubmitting, setIsSubmitting] = useState(false);
-  // const [submitError, setSubmitError] = useState<string | null>(null);
-
-  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -74,21 +75,20 @@ export const TripForm = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const isValid = validate();
-
-    if (!isValid) {
+    if (!validate()) {
       return;
     }
 
     try {
-      // setIsSubmitting(true);
-      // setSubmitError(null);
+      setIsSubmitting(true);
+      setSubmitError(null);
 
       const response = await fetch("/api/trips", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           title,
           start_date: startDate,
@@ -101,20 +101,14 @@ export const TripForm = () => {
         throw new Error("旅行の登録に失敗しました");
       }
 
-      navigate("/trips");
+      // ここでは画面遷移しない
+      onSuccess();
     } catch (error) {
       console.error(error);
-      // setSubmitError("旅行の登録に失敗しました");
+      setSubmitError("旅行の登録に失敗しました");
     } finally {
-      // setIsSubmitting(false);
+      setIsSubmitting(false);
     }
-
-    // console.log({
-    //   title,
-    //   startDate,
-    //   endDate,
-    //   description,
-    // });
   };
 
   const inputClassName =
@@ -158,6 +152,7 @@ export const TripForm = () => {
 
           {/* 開始日・終了日 */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            {/* 開始日 */}
             <div>
               <div className="flex items-center justify-between">
                 <label htmlFor="startDate" className="text-sm font-medium text-gray-700">
@@ -175,15 +170,19 @@ export const TripForm = () => {
                 onChange={(e) => {
                   setStartDate(e.target.value);
 
-                  setErrors((prev) => ({
-                    ...prev,
-                    startDate: undefined,
-                  }));
+                  if (e.target.value) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      startDate: undefined,
+                      tripPeriod: undefined,
+                    }));
+                  }
                 }}
                 className={inputClassName}
               />
             </div>
 
+            {/* 終了日 */}
             <div>
               <div className="flex items-center justify-between">
                 <label htmlFor="endDate" className="text-sm font-medium text-gray-700">
@@ -201,11 +200,13 @@ export const TripForm = () => {
                 onChange={(e) => {
                   setEndDate(e.target.value);
 
-                  setErrors((prev) => ({
-                    ...prev,
-                    endDate: undefined,
-                    tripPeriod: undefined,
-                  }));
+                  if (e.target.value) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      endDate: undefined,
+                      tripPeriod: undefined,
+                    }));
+                  }
                 }}
                 className={inputClassName}
               />
@@ -237,14 +238,18 @@ export const TripForm = () => {
               <span className="text-xs text-gray-400">{description.length} / 500</span>
             </div>
           </div>
+
+          {/* API送信エラー */}
+          {submitError && <p className="text-sm font-medium text-red-500">{submitError}</p>}
         </div>
 
         <div className="mt-8 flex items-center justify-end border-t border-gray-100 pt-6">
           <button
             type="submit"
-            className="rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+            disabled={isSubmitting}
+            className="rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            旅行を作成
+            {isSubmitting ? "登録中..." : "旅行を作成"}
           </button>
         </div>
       </form>
