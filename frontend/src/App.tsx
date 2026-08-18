@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { Outlet } from "react-router-dom";
+
 import { useAuth } from "./context/useAuth";
-import TripListPages from "./pages/TripListPages";
 
 type HealthResponse = {
   backend: string;
@@ -9,6 +10,7 @@ type HealthResponse = {
 
 export default function App() {
   const { user } = useAuth();
+
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,6 +58,7 @@ export default function App() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">My trip, Your trip</h1>
+
             <p className="mt-1 text-sm text-gray-500">旅行の予定を管理しましょう</p>
           </div>
 
@@ -68,21 +71,7 @@ export default function App() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <section className="mb-10">
-          <p className="text-sm font-medium text-gray-500">ようこそ</p>
-
-          <h2 className="mt-1 text-3xl font-bold tracking-tight text-gray-900">あなたの旅行</h2>
-
-          <p className="mt-2 max-w-2xl text-gray-600">登録した旅行の予定を確認できます。</p>
-        </section>
-
-        <section>
-          <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-gray-900">旅行一覧</h3>
-          </div>
-
-          <TripListPages />
-        </section>
+        <Outlet />
       </main>
     </div>
   );
