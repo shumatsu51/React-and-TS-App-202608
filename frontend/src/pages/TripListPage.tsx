@@ -11,7 +11,7 @@ export type Trip = {
   description: string | null;
 };
 
-export default function TripListPages() {
+export default function TripListPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
