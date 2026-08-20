@@ -37,15 +37,15 @@ export const TripForm = ({ onSuccess }: TripFormProps) => {
 
     // 入力の有無をチェック
     if (!title.trim()) {
-      newErrors.title = "項目を入力してください";
+      newErrors.title = "旅行名を入力してください";
     }
 
     if (!startDate) {
-      newErrors.startDate = "項目を入力してください";
+      newErrors.startDate = "開始日を入力してください";
     }
 
     if (!endDate) {
-      newErrors.endDate = "項目を入力してください";
+      newErrors.endDate = "終了日を入力してください";
     }
 
     // 旅行期間をチェック
@@ -112,147 +112,146 @@ export const TripForm = ({ onSuccess }: TripFormProps) => {
   };
 
   const inputClassName =
-    "mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10";
+    "mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10";
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <form
-        onSubmit={handleSubmit}
-        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
-      >
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900">旅行の基本情報</h2>
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      {/* フォームタイトル */}
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold text-gray-900">旅行の基本情報</h2>
 
-          <p className="mt-2 text-sm leading-6 text-gray-500">
-            旅行名と日程を入力してください。旅行期間は最大14日間です。
-          </p>
+        <p className="mt-2 text-sm leading-6 text-gray-500">
+          旅行名と日程を入力してください。旅行期間は最大14日間です。
+        </p>
+      </div>
+
+      <div className="space-y-7">
+        {/* 旅行名 */}
+        <div>
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+            旅行名
+            <span className="ml-1 text-xs font-normal text-red-400">*必須</span>
+          </label>
+
+          <input
+            id="title"
+            type="text"
+            value={title}
+            onChange={handleTitleChange}
+            placeholder="例：秋の京都・大阪旅行"
+            className={inputClassName}
+          />
+
+          {errors.title && <p className="mt-2 text-sm text-red-500">{errors.title}</p>}
         </div>
 
-        <div className="space-y-6">
-          {/* 旅行名 */}
+        {/* 開始日・終了日 */}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
-            <div className="flex items-center justify-between">
-              <label htmlFor="title" className="text-sm font-medium text-gray-700">
-                旅行名
-                <span className="ml-1 text-red-500">*</span>
-              </label>
-
-              {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
-            </div>
-
-            <input
-              id="title"
-              type="text"
-              value={title}
-              onChange={handleTitleChange}
-              placeholder="例：秋の京都・大阪旅行"
-              className={inputClassName}
-            />
-          </div>
-
-          {/* 開始日・終了日 */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {/* 開始日 */}
-            <div>
-              <div className="flex items-center justify-between">
-                <label htmlFor="startDate" className="text-sm font-medium text-gray-700">
-                  開始日
-                  <span className="ml-1 text-red-500">*</span>
-                </label>
-
-                {errors.startDate && <p className="text-sm text-red-500">{errors.startDate}</p>}
-              </div>
-
-              <input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-
-                  if (e.target.value) {
-                    setErrors((prev) => ({
-                      ...prev,
-                      startDate: undefined,
-                      tripPeriod: undefined,
-                    }));
-                  }
-                }}
-                className={inputClassName}
-              />
-            </div>
-
-            {/* 終了日 */}
-            <div>
-              <div className="flex items-center justify-between">
-                <label htmlFor="endDate" className="text-sm font-medium text-gray-700">
-                  終了日
-                  <span className="ml-1 text-red-500">*</span>
-                </label>
-
-                {errors.endDate && <p className="text-sm text-red-500">{errors.endDate}</p>}
-              </div>
-
-              <input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-
-                  if (e.target.value) {
-                    setErrors((prev) => ({
-                      ...prev,
-                      endDate: undefined,
-                      tripPeriod: undefined,
-                    }));
-                  }
-                }}
-                className={inputClassName}
-              />
-            </div>
-          </div>
-
-          {/* 旅行期間エラー */}
-          {errors.tripPeriod && (
-            <p className="text-sm font-medium text-red-500">{errors.tripPeriod}</p>
-          )}
-
-          {/* 説明 */}
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-              説明
+            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
+              開始日
+              <span className="ml-1 text-xs font-normal text-red-400">*必須</span>
             </label>
 
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="行きたい場所や旅行の目的などを入力してください"
-              rows={5}
-              maxLength={500}
-              className={`${inputClassName} resize-none`}
+            <input
+              id="startDate"
+              type="date"
+              value={startDate}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+
+                if (e.target.value) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    startDate: undefined,
+                    tripPeriod: undefined,
+                  }));
+                }
+              }}
+              className={inputClassName}
             />
 
-            <div className="mt-2 flex justify-end">
-              <span className="text-xs text-gray-400">{description.length} / 500</span>
-            </div>
+            {errors.startDate && <p className="mt-2 text-sm text-red-500">{errors.startDate}</p>}
           </div>
 
-          {/* API送信エラー */}
-          {submitError && <p className="text-sm font-medium text-red-500">{submitError}</p>}
+          <div>
+            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
+              終了日
+              <span className="ml-1 text-xs font-normal text-red-400">*必須</span>
+            </label>
+
+            <input
+              id="endDate"
+              type="date"
+              value={endDate}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+
+                if (e.target.value) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    endDate: undefined,
+                    tripPeriod: undefined,
+                  }));
+                }
+              }}
+              className={inputClassName}
+            />
+
+            {errors.endDate && <p className="mt-2 text-sm text-red-500">{errors.endDate}</p>}
+          </div>
         </div>
 
-        <div className="mt-8 flex items-center justify-end border-t border-gray-100 pt-6">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isSubmitting ? "登録中..." : "旅行を作成"}
-          </button>
+        {/* 旅行期間エラー */}
+        {errors.tripPeriod && (
+          <div className="rounded-lg bg-red-50 px-4 py-3">
+            <p className="text-sm font-medium text-red-600">{errors.tripPeriod}</p>
+          </div>
+        )}
+
+        {/* 説明 */}
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+            説明
+            <span className="ml-1 text-xs font-normal text-gray-400">（任意）</span>
+          </label>
+
+          <textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="行きたい場所や旅行の目的などを入力してください"
+            rows={5}
+            maxLength={500}
+            className={`${inputClassName} resize-none`}
+          />
+
+          <div className="mt-2 flex justify-end">
+            <span className="text-xs text-gray-400">{description.length} / 500</span>
+          </div>
         </div>
-      </form>
-    </div>
+
+        {/* API送信エラー */}
+        {submitError && (
+          <div className="rounded-lg bg-red-50 px-4 py-3">
+            <p className="text-sm font-medium text-red-600">{submitError}</p>
+          </div>
+        )}
+      </div>
+
+      {/* 送信ボタン */}
+      <div className="mt-8 flex justify-end border-t border-gray-100 pt-6">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="rounded-lg bg-gray-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isSubmitting ? "登録中..." : "旅行を作成"}
+        </button>
+      </div>
+    </form>
   );
 };
