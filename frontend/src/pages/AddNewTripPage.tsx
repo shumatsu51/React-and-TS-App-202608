@@ -17,17 +17,34 @@ export default function AddNewTripPage() {
   };
 
   return (
-    <>
-      <main>
-        <Link to="/trips">← 旅行一覧に戻る</Link>
-        <h1 className="text-3xl font-bold text-gray-900">旅行新規作成</h1>
+    <main className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+        {/* 戻るリンク */}
+        <Link
+          to="/trips"
+          className="inline-flex items-center text-sm font-medium text-gray-500 transition hover:text-gray-900"
+        >
+          ← 旅行一覧に戻る
+        </Link>
+
+        {/* ページタイトル */}
+        <div className="mt-6 mb-8">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+            旅行新規作成
+          </h1>
+
+          <p className="mt-2 text-sm leading-6 text-gray-500">新しい旅行の情報を登録します。</p>
+        </div>
+
+        {/* フォーム */}
         <TripForm onSuccess={handleSuccess} />
-        <SuccessModal
-          isOpen={isSuccessModalOpen}
-          message="旅行の登録が完了しました"
-          onConfirm={handleConfirm}
-        />
-      </main>
-    </>
+      </div>
+
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        message="旅行の登録が完了しました"
+        onConfirm={handleConfirm}
+      />
+    </main>
   );
 }

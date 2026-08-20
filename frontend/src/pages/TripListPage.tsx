@@ -61,27 +61,34 @@ export default function TripListPage() {
     );
   }
 
-  if (trips.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
-        <h3 className="text-lg font-semibold text-gray-900">旅行がまだありません</h3>
-
-        <p className="mt-2 text-sm text-gray-500">新しい旅行を登録すると、ここに表示されます。</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <button
-        className="grid border px-4 py-4 hover:bg-gray-200 text-center text-red-500 bg-gray-100 rounded-md"
-        onClick={() => navigate("/trips/new")}
-      >
-        +旅行を作成
-      </button>
-      {trips.map((trip) => (
-        <TripCard key={trip.id} trip={trip} />
-      ))}
+    <div className="space-y-6">
+      {/* 一覧右上の作成ボタン */}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => navigate("/trips/new")}
+          className="rounded-lg bg-red-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-600"
+        >
+          +旅行を作成
+        </button>
+      </div>
+
+      {/* 旅行が0件の場合 */}
+      {trips.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
+          <h3 className="text-lg font-semibold text-gray-900">旅行がまだありません</h3>
+
+          <p className="mt-2 text-sm text-gray-500">新しい旅行を登録すると、ここに表示されます。</p>
+        </div>
+      ) : (
+        /* カード一覧 */
+        <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {trips.map((trip) => (
+            <TripCard key={trip.id} trip={trip} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
