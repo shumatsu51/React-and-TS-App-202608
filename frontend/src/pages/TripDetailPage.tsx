@@ -5,6 +5,8 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { SuccessModal } from "../components/SuccessModal";
 import { deleteTrip, getTrip } from "../api/trips";
 import { Trip } from "./TripListPage";
+import { TripPlaceList } from "../components/trip-place/TripPlaceList";
+import { getTripStatus } from "../utils/tripStatus";
 
 export default function TripDetailPage() {
   const { id } = useParams();
@@ -84,6 +86,8 @@ export default function TripDetailPage() {
     return null;
   }
 
+  const { label, className } = getTripStatus(trip.start_date, trip.end_date);
+
   return (
     <>
       <div className="mx-auto max-w-3xl">
@@ -100,9 +104,14 @@ export default function TripDetailPage() {
             <div>
               <p className="text-sm text-gray-500">旅行詳細</p>
 
-              <h1 className="mt-1 text-3xl font-bold text-gray-900">{trip.title}</h1>
-            </div>
+              <div className="mt-1 flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-900">{trip.title}</h1>
 
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${className}`}>
+                  {label}
+                </span>
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => setIsDeleteConfirmOpen(true)}
@@ -120,6 +129,7 @@ export default function TripDetailPage() {
 
             <p className="mt-4">{trip.description || "説明はありません"}</p>
           </div>
+          {trip && <TripPlaceList tripId={trip.id} />}
         </div>
       </div>
 
