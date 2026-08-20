@@ -54,7 +54,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">My trip, Your trip</h1>
@@ -70,7 +70,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-6xl px-4 pt-32 pb-10 sm:px-6 lg:px-8">
         <Outlet />
       </main>
     </div>

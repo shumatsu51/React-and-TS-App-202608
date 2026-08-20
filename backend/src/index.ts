@@ -5,6 +5,7 @@ import auth from "./routes/auth.js";
 import health from "./routes/health.js";
 import dbHealth from "./routes/db-health.js";
 import trips from "./routes/trips.js";
+import tripPlaces from "./routes/trip-places.js";
 
 const app = new Hono();
 
@@ -25,6 +26,7 @@ app.route("/api/auth", auth);
 app.route("/api/health", health);
 app.route("/api/db-health", dbHealth);
 app.route("/api/trips", trips);
+app.route("/api/trip-places", tripPlaces);
 
 // サーバーの起動
 const port = Number(process.env.PORT ?? 3000);

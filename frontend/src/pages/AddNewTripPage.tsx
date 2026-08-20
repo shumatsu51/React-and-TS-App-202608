@@ -1,0 +1,50 @@
+import { Link, useNavigate } from "react-router-dom";
+import { TripForm } from "../components/TripForm";
+import { useState } from "react";
+import { SuccessModal } from "../components/SuccessModal";
+
+export default function AddNewTripPage() {
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+
+  const navigate = useNavigate();
+
+  const handleSuccess = () => {
+    setIsSuccessModalOpen(true);
+  };
+
+  const handleConfirm = () => {
+    navigate("/trips");
+  };
+
+  return (
+    <main className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+        {/* 戻るリンク */}
+        <Link
+          to="/trips"
+          className="inline-flex items-center text-sm font-medium text-gray-500 transition hover:text-gray-900"
+        >
+          ← 旅行一覧に戻る
+        </Link>
+
+        {/* ページタイトル */}
+        <div className="mt-6 mb-8">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+            旅行新規作成
+          </h1>
+
+          <p className="mt-2 text-sm leading-6 text-gray-500">新しい旅行の情報を登録します。</p>
+        </div>
+
+        {/* フォーム */}
+        <TripForm onSuccess={handleSuccess} />
+      </div>
+
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        message="旅行の登録が完了しました"
+        onConfirm={handleConfirm}
+      />
+    </main>
+  );
+}

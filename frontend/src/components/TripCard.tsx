@@ -1,21 +1,37 @@
-import type { Trip } from "../pages/TripListPages";
+import { useNavigate } from "react-router-dom";
+import { Trip } from "../pages/TripListPage";
+import { getTripStatus } from "../utils/tripStatus";
 
 type Props = {
   trip: Trip;
 };
 
-export function TripCard({ trip }: Props) {
+export const TripCard = ({ trip }: Props) => {
+  const navigate = useNavigate();
+
+  const status = getTripStatus(trip.start_date, trip.end_date);
+
   return (
-    <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-      <h2 className="mb-3 text-xl font-bold text-gray-900">{trip.title}</h2>
+    <button
+      type="button"
+      onClick={() => navigate(`/trips/${trip.id}`)}
+      className="flex h-56 w-full flex-col rounded-2xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+    >
+      <div className="flex items-start justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">{trip.title}</h3>
 
-      <div className="flex items-center gap-2 text-sm text-gray-600">
-        <span>{trip.start_date}</span>
-
-        <span className="text-gray-400">→</span>
-
-        <span>{trip.end_date}</span>
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${status.className}`}>
+          {status.label}
+        </span>
       </div>
-    </div>
+
+      <p className="mt-2 text-sm text-gray-500">
+        {trip.start_date} ～ {trip.end_date}
+      </p>
+
+      {trip.description && (
+        <p className="mt-4 line-clamp-3 text-sm text-gray-600">{trip.description}</p>
+      )}
+    </button>
   );
-}
+};

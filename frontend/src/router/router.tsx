@@ -1,8 +1,9 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import App from "../App";
-import AddNewTripPage from "../pages/AddNewTripPages";
-import TripListPages from "../pages/TripListPages";
+import AddNewTripPage from "../pages/AddNewTripPage";
+import TripListPage from "../pages/TripListPage";
+import TripDetailPage from "../pages/TripDetailPage";
 
 export const router = createBrowserRouter([
   {
@@ -15,11 +16,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "trips",
-        element: <TripListPages />,
+        element: <TripListPage />,
       },
       {
         path: "trips/new",
         element: <AddNewTripPage />,
+      },
+      {
+        path: "trips/:id",
+        element: <TripDetailPage />,
       },
     ],
   },

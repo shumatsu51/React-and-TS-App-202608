@@ -125,4 +125,79 @@ trips.post("/", async (c) => {
   }
 });
 
+// GET /api/trips/:id
+trips.get("/:id", async (c) => {
+  try {
+    const user = c.get("user");
+    const userId = Number(user.sub);
+
+    const tripId = Number(c.req.param("id"));
+
+    if (!Number.isInteger(tripId)) {
+      return c.json({ message: "不正な旅行IDです" }, 400);
+    }
+
+    const [rows] = await pool.query<mysql.RowDataPacket[]>(
+      `
+      SELECT
+        id,
+        user_id,
+        title,
+        start_date,
+        end_date,
+        description
+      FROM trips
+      WHERE id = ?
+        AND user_id = ?
+      `,
+      [tripId, userId]
+    );
+
+    const trip = rows[0];
+
+    if (!trip) {
+      return c.json({ message: "旅行が見つかりません" }, 404);
+    }
+
+    return c.json(trip);
+  } catch (error) {
+    console.error(error);
+
+    return c.json({ message: "Failed to fetch trip" }, 500);
+  }
+});
+
+// DELETE /api/trips/:id
+trips.delete("/:id", async (c) => {
+  try {
+    const user = c.get("user");
+    const userId = Number(user.sub);
+
+    const tripId = Number(c.req.param("id"));
+
+    if (!Number.isInteger(tripId)) {
+      return c.json({ message: "不正な旅行IDです" }, 400);
+    }
+
+    const [result] = await pool.query<mysql.ResultSetHeader>(
+      `
+      DELETE FROM trips
+      WHERE id = ?
+        AND user_id = ?
+      `,
+      [tripId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return c.json({ message: "旅行が見つかりません" }, 404);
+    }
+
+    return c.body(null, 204);
+  } catch (error) {
+    console.error(error);
+
+    return c.json({ message: "Failed to delete trip" }, 500);
+  }
+});
+
 export default trips;

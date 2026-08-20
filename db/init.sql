@@ -45,3 +45,20 @@ VALUES (
   '2026-08-22',
   '夏休みの京都旅行'
 );
+
+CREATE TABLE trip_places (
+  id          INT NOT NULL AUTO_INCREMENT,
+  trip_id     INT NOT NULL,
+  name        VARCHAR(100) NOT NULL,
+  is_visited  BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+              ON UPDATE CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (id),
+
+  CONSTRAINT fk_trip_places_trip
+    FOREIGN KEY (trip_id)
+    REFERENCES trips(id)
+    ON DELETE CASCADE
+);
