@@ -100,7 +100,7 @@ export default function EditTripPage() {
 
       <SuccessModal
         isOpen={isSuccessModalOpen}
-        message="旅行情報を更新しました"
+        message="✅旅行情報を更新しました"
         onConfirm={handleConfirm}
       />
     </main>

@@ -119,7 +119,7 @@ export const TripForm = ({ onSuccess, initialValues, mode = "create", tripId }: 
 
         throw new Error(
           errorData.message ??
-            (isEditMode ? "旅行の更新に失敗しました" : "旅行の登録に失敗しました")
+            (isEditMode ? "旅行情報の更新に失敗しました" : "旅行情報の登録に失敗しました")
         );
       }
 
@@ -130,7 +130,9 @@ export const TripForm = ({ onSuccess, initialValues, mode = "create", tripId }: 
       if (error instanceof Error) {
         setSubmitError(error.message);
       } else {
-        setSubmitError(mode === "edit" ? "旅行の更新に失敗しました" : "旅行の登録に失敗しました");
+        setSubmitError(
+          mode === "edit" ? "旅行情報の更新に失敗しました" : "旅行情報の登録に失敗しました"
+        );
       }
     } finally {
       setIsSubmitting(false);

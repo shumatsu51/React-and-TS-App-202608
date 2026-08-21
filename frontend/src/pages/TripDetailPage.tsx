@@ -156,7 +156,7 @@ export default function TripDetailPage() {
 
       <SuccessModal
         isOpen={isDeleteCompleteOpen}
-        message="削除しました"
+        message="☑️旅行を削除しました"
         onConfirm={handleDeleteComplete}
       />
     </>
