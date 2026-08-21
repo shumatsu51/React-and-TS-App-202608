@@ -4,6 +4,7 @@ import App from "../App";
 import AddNewTripPage from "../pages/AddNewTripPage";
 import TripListPage from "../pages/TripListPage";
 import TripDetailPage from "../pages/TripDetailPage";
+import EditTripPage from "../pages/EditTripPage";
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,10 @@ export const router = createBrowserRouter([
       {
         path: "trips/:id",
         element: <TripDetailPage />,
+      },
+      {
+        path: "/trips/:id/edit",
+        element: <EditTripPage />,
       },
     ],
   },

@@ -1,7 +1,17 @@
 import { type ChangeEvent, type FormEvent, useState } from "react";
 
+type TripFormData = {
+  title: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+};
+
 type TripFormProps = {
   onSuccess: () => void;
+  initialValues?: TripFormData;
+  mode?: "create" | "edit";
+  tripId?: number;
 };
 
 type FormErrors = {
@@ -11,11 +21,11 @@ type FormErrors = {
   tripPeriod?: string;
 };
 
-export const TripForm = ({ onSuccess }: TripFormProps) => {
-  const [title, setTitle] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [description, setDescription] = useState("");
+export const TripForm = ({ onSuccess, initialValues, mode = "create", tripId }: TripFormProps) => {
+  const [title, setTitle] = useState(initialValues?.title ?? "");
+  const [startDate, setStartDate] = useState(initialValues?.startDate ?? "");
+  const [endDate, setEndDate] = useState(initialValues?.endDate ?? "");
+  const [description, setDescription] = useState(initialValues?.description ?? "");
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,8 +93,10 @@ export const TripForm = ({ onSuccess }: TripFormProps) => {
       setIsSubmitting(true);
       setSubmitError(null);
 
-      const response = await fetch("/api/trips", {
-        method: "POST",
+      const isEditMode = mode === "edit";
+
+      const response = await fetch(isEditMode ? `/api/trips/${tripId}` : "/api/trips", {
+        method: isEditMode ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -98,14 +110,30 @@ export const TripForm = ({ onSuccess }: TripFormProps) => {
       });
 
       if (!response.ok) {
-        throw new Error("旅行の登録に失敗しました");
+        const errorData = await response.json();
+
+        console.error("API error:", {
+          status: response.status,
+          data: errorData,
+        });
+
+        throw new Error(
+          errorData.message ??
+            (isEditMode ? "旅行情報の更新に失敗しました" : "旅行情報の登録に失敗しました")
+        );
       }
 
-      // ここでは画面遷移しない
       onSuccess();
     } catch (error) {
       console.error(error);
-      setSubmitError("旅行の登録に失敗しました");
+
+      if (error instanceof Error) {
+        setSubmitError(error.message);
+      } else {
+        setSubmitError(
+          mode === "edit" ? "旅行情報の更新に失敗しました" : "旅行情報の登録に失敗しました"
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -127,7 +155,6 @@ export const TripForm = ({ onSuccess }: TripFormProps) => {
           旅行名と日程を入力してください。旅行期間は最大14日間です。
         </p>
       </div>
-
       <div className="space-y-7">
         {/* 旅行名 */}
         <div>
@@ -241,17 +268,20 @@ export const TripForm = ({ onSuccess }: TripFormProps) => {
           </div>
         )}
       </div>
-
       {/* 送信ボタン */}
-      <div className="mt-8 flex justify-end border-t border-gray-100 pt-6">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-lg bg-gray-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isSubmitting ? "登録中..." : "旅行を作成"}
-        </button>
-      </div>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="rounded-lg bg-gray-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {isSubmitting
+          ? mode === "edit"
+            ? "更新中..."
+            : "登録中..."
+          : mode === "edit"
+            ? "変更を保存"
+            : "旅行を作成"}
+      </button>
     </form>
   );
 };

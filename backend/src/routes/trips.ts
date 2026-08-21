@@ -79,10 +79,10 @@ trips.post("/", async (c) => {
 
     const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24) + 1;
 
-    if (diffDays > 7) {
+    if (diffDays > 14) {
       return c.json(
         {
-          message: "旅行期間は7日間以内に収まるように設定してください",
+          message: "旅行期間は14日間以内に収まるように設定してください",
         },
         400
       );
@@ -164,6 +164,94 @@ trips.get("/:id", async (c) => {
     console.error(error);
 
     return c.json({ message: "Failed to fetch trip" }, 500);
+  }
+});
+
+// PUT /api/trips/:id
+trips.put("/:id", async (c) => {
+  try {
+    const user = c.get("user");
+    const userId = Number(user.sub);
+
+    const tripId = Number(c.req.param("id"));
+
+    if (!Number.isInteger(tripId)) {
+      return c.json({ message: "不正な旅行IDです" }, 400);
+    }
+
+    const body = await c.req.json();
+
+    const { title, start_date, end_date, description } = body;
+
+    // 必須チェック
+    if (!title?.trim() || !start_date || !end_date) {
+      return c.json(
+        {
+          message: "必須項目が入力されていません",
+        },
+        400
+      );
+    }
+
+    const start = new Date(`${start_date}T00:00:00`);
+    const end = new Date(`${end_date}T00:00:00`);
+
+    // 終了日が開始日より前
+    if (end < start) {
+      return c.json(
+        {
+          message: "終了日は開始日以降の日付を設定してください",
+        },
+        400
+      );
+    }
+
+    const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24) + 1;
+
+    if (diffDays > 14) {
+      return c.json(
+        {
+          message: "旅行期間は14日間以内に収まるように設定してください",
+        },
+        400
+      );
+    }
+
+    const [result] = await pool.query<mysql.ResultSetHeader>(
+      `
+      UPDATE trips
+      SET
+        title = ?,
+        start_date = ?,
+        end_date = ?,
+        description = ?
+      WHERE id = ?
+        AND user_id = ?
+      `,
+      [title.trim(), start_date, end_date, description?.trim() || null, tripId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return c.json({ message: "旅行が見つかりません" }, 404);
+    }
+
+    return c.json({
+      id: tripId,
+      user_id: userId,
+      title: title.trim(),
+      start_date,
+      end_date,
+      description: description?.trim() || null,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return c.json(
+      {
+        message: "Failed to update trip",
+      },
+      500
+    );
   }
 });
 

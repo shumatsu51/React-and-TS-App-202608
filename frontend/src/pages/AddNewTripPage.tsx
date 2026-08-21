@@ -42,7 +42,7 @@ export default function AddNewTripPage() {
 
       <SuccessModal
         isOpen={isSuccessModalOpen}
-        message="旅行の登録が完了しました"
+        message="✅旅行情報を登録しました"
         onConfirm={handleConfirm}
       />
     </main>

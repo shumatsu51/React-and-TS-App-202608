@@ -112,14 +112,26 @@ export default function TripDetailPage() {
                 </span>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsDeleteConfirmOpen(true)}
-              className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
-              aria-label="旅行を削除"
-            >
-              🗑
-            </button>
+            <div className="flex items-center gap-3">
+              {/* 編集ボタン */}
+              <button
+                type="button"
+                onClick={() => navigate(`/trips/${trip.id}/edit`)}
+                className="rounded-lg p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+              >
+                ✏️
+              </button>
+
+              {/* 削除ボタン */}
+              <button
+                type="button"
+                onClick={() => setIsDeleteConfirmOpen(true)}
+                className="rounded-lg p-2 text-red-400 hover:bg-red-50 hover:text-red-600"
+                aria-label="旅行を削除"
+              >
+                🗑
+              </button>
+            </div>
           </div>
 
           <div className="mt-8 border-t border-gray-100 pt-6">
@@ -144,7 +156,7 @@ export default function TripDetailPage() {
 
       <SuccessModal
         isOpen={isDeleteCompleteOpen}
-        message="削除しました"
+        message="☑️旅行を削除しました"
         onConfirm={handleDeleteComplete}
       />
     </>
