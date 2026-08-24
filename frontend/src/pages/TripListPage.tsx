@@ -15,6 +15,12 @@ const statusFilters: { value: TripStatusFilter; label: string }[] = [
   { value: "completed", label: "終了済み" },
 ];
 
+const statusPriority: Record<TripStatus, number> = {
+  ongoing: 0,
+  upcoming: 1,
+  completed: 2,
+};
+
 export default function TripListPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [statusFilter, setStatusFilter] = useState<TripStatusFilter>("all");
@@ -25,16 +31,40 @@ export default function TripListPage() {
   const navigate = useNavigate();
 
   const normalizedKeyword = keyword.trim().toLocaleLowerCase();
-  const filteredTrips = trips.filter((trip) => {
-    const matchesStatus =
-      statusFilter === "all" || getTripStatus(trip.start_date, trip.end_date).key === statusFilter;
+  const keywordMatchedTrips = trips.filter((trip) => {
     const matchesKeyword =
       normalizedKeyword === "" ||
       trip.title.toLocaleLowerCase().includes(normalizedKeyword) ||
       trip.description?.toLocaleLowerCase().includes(normalizedKeyword);
 
-    return matchesStatus && matchesKeyword;
+    return matchesKeyword;
   });
+  const statusCounts: Record<TripStatusFilter, number> = {
+    all: keywordMatchedTrips.length,
+    upcoming: 0,
+    ongoing: 0,
+    completed: 0,
+  };
+
+  keywordMatchedTrips.forEach((trip) => {
+    statusCounts[getTripStatus(trip.start_date, trip.end_date).key] += 1;
+  });
+
+  const filteredTrips = keywordMatchedTrips
+    .filter(
+      (trip) =>
+        statusFilter === "all" || getTripStatus(trip.start_date, trip.end_date).key === statusFilter
+    )
+    .sort((firstTrip, secondTrip) => {
+      if (statusFilter !== "all") {
+        return 0;
+      }
+
+      return (
+        statusPriority[getTripStatus(firstTrip.start_date, firstTrip.end_date).key] -
+        statusPriority[getTripStatus(secondTrip.start_date, secondTrip.end_date).key]
+      );
+    });
 
   const fetchTrips = useCallback(async () => {
     try {
@@ -97,6 +127,7 @@ export default function TripListPage() {
           <div className="flex flex-wrap gap-2" role="group" aria-label="旅行ステータスで絞り込み">
             {statusFilters.map((filter) => {
               const isSelected = statusFilter === filter.value;
+              const count = statusCounts[filter.value];
 
               return (
                 <button
@@ -111,6 +142,7 @@ export default function TripListPage() {
                   }`}
                 >
                   {filter.label}
+                  <span aria-hidden="true">（{count}）</span>
                 </button>
               );
             })}
