@@ -7,6 +7,7 @@ import { deleteTrip, getTrip } from "../api/trips";
 import { Trip } from "./TripListPage";
 import { TripPlaceList } from "../components/trip-place/TripPlaceList";
 import { getTripStatus } from "../utils/tripStatus";
+import { getTripDuration } from "../utils/tripDuration";
 
 export default function TripDetailPage() {
   const { id } = useParams();
@@ -88,6 +89,8 @@ export default function TripDetailPage() {
 
   const { label, className } = getTripStatus(trip.start_date, trip.end_date);
 
+  const duration = getTripDuration(trip.start_date, trip.end_date);
+
   return (
     <>
       <div className="mx-auto max-w-3xl">
@@ -136,7 +139,7 @@ export default function TripDetailPage() {
 
           <div className="mt-8 border-t border-gray-100 pt-6">
             <p>
-              {trip.start_date} ～ {trip.end_date}
+              {trip.start_date} ～ {trip.end_date} （{duration}日間）
             </p>
 
             <p className="mt-4">{trip.description || "説明はありません"}</p>
