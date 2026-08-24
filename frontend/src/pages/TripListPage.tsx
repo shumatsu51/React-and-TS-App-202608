@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TripCard } from "../components/TripCard";
+import { getTripStatus, type TripStatus } from "../utils/tripStatus";
 
 export type Trip = {
   id: number;
@@ -11,12 +12,27 @@ export type Trip = {
   description: string | null;
 };
 
+type TripStatusFilter = "all" | TripStatus;
+
+const statusFilters: { value: TripStatusFilter; label: string }[] = [
+  { value: "all", label: "全て" },
+  { value: "upcoming", label: "準備中" },
+  { value: "ongoing", label: "旅行中" },
+  { value: "completed", label: "終了済み" },
+];
+
 export default function TripListPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [statusFilter, setStatusFilter] = useState<TripStatusFilter>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
+
+  const filteredTrips = trips.filter(
+    (trip) =>
+      statusFilter === "all" || getTripStatus(trip.start_date, trip.end_date).key === statusFilter
+  );
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -63,8 +79,30 @@ export default function TripListPage() {
 
   return (
     <div className="space-y-6">
-      {/* 一覧右上の作成ボタン */}
-      <div className="flex justify-end">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="旅行ステータスで絞り込み">
+          {statusFilters.map((filter) => {
+            const isSelected = statusFilter === filter.value;
+
+            return (
+              <button
+                key={filter.value}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => setStatusFilter(filter.value)}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                  isSelected
+                    ? "border-red-500 bg-red-500 text-white"
+                    : "border-gray-300 bg-white text-gray-600 hover:border-red-300 hover:text-red-600"
+                }`}
+              >
+                {filter.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 一覧右上の作成ボタン */}
         <button
           type="button"
           onClick={() => navigate("/trips/new")}
@@ -81,10 +119,16 @@ export default function TripListPage() {
 
           <p className="mt-2 text-sm text-gray-500">新しい旅行を登録すると、ここに表示されます。</p>
         </div>
+      ) : filteredTrips.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
+          <h3 className="text-lg font-semibold text-gray-900">該当する旅行はありません</h3>
+
+          <p className="mt-2 text-sm text-gray-500">別のステータスを選択してください。</p>
+        </div>
       ) : (
         /* カード一覧 */
         <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {trips.map((trip) => (
+          {filteredTrips.map((trip) => (
             <TripCard key={trip.id} trip={trip} />
           ))}
         </div>
