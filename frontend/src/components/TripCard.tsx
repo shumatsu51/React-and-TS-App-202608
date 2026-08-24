@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Trip } from "../pages/TripListPage";
+import type { Trip } from "../types/trip";
 import { getTripStatus } from "../utils/tripStatus";
 import { getTripDuration } from "../utils/tripDuration";
 

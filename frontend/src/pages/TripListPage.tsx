@@ -2,16 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ErrorState } from "../components/ErrorState";
 import { TripCard } from "../components/TripCard";
+import { getTrips } from "../api/trips";
+import type { Trip } from "../types/trip";
 import { getTripStatus, type TripStatus } from "../utils/tripStatus";
-
-export type Trip = {
-  id: number;
-  user_id: number;
-  title: string;
-  start_date: string;
-  end_date: string;
-  description: string | null;
-};
 
 type TripStatusFilter = "all" | TripStatus;
 
@@ -37,15 +30,7 @@ export default function TripListPage() {
 
   const fetchTrips = useCallback(async () => {
     try {
-      const response = await fetch("/api/trips", {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("旅行一覧の取得に失敗しました");
-      }
-
-      const data: Trip[] = await response.json();
+      const data = await getTrips();
       setTrips(data);
     } catch (error) {
       console.error(error);
