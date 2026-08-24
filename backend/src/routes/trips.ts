@@ -217,6 +217,25 @@ trips.put("/:id", async (c) => {
       );
     }
 
+    const [itineraryRows] = await pool.query<mysql.RowDataPacket[]>(
+      `
+        SELECT COUNT(*) AS count
+        FROM itinerary_items
+        WHERE trip_id = ?
+          AND (scheduled_date < ? OR scheduled_date > ?)
+      `,
+      [tripId, start_date, end_date]
+    );
+
+    if (Number(itineraryRows[0].count) > 0) {
+      return c.json(
+        {
+          message: "旅行期間外になる旅程があります。先に旅程の日付を変更または削除してください",
+        },
+        409
+      );
+    }
+
     const [result] = await pool.query<mysql.ResultSetHeader>(
       `
       UPDATE trips
