@@ -99,4 +99,26 @@ describe("TripListPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "終了済み" }));
     expect(screen.getByText("該当する旅行はありません")).toBeInTheDocument();
   });
+
+  it("取得失敗後に再試行すると旅行一覧を表示する", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: false } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => trips,
+      } as Response);
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("旅行一覧を取得できませんでした");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "再試行" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("北海道旅行")).toBeInTheDocument();
+    });
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
 });
