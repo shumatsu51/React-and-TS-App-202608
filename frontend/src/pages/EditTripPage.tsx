@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { TripForm } from "../components/TripForm";
 import { SuccessModal } from "../components/SuccessModal";
+import { ErrorState } from "../components/ErrorState";
 import { getTrip } from "../api/trips";
 import type { Trip } from "./TripListPage";
 
@@ -16,28 +17,31 @@ export default function EditTripPage() {
 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchTrip = async () => {
-      if (!id) {
-        setError("旅行IDを取得できませんでした");
-        setIsLoading(false);
-        return;
-      }
+  const fetchTrip = useCallback(async () => {
+    if (!id) {
+      await Promise.resolve();
+      setError("旅行IDを取得できませんでした");
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        const data = await getTrip(Number(id));
+    try {
+      const data = await getTrip(Number(id));
 
-        setTrip(data);
-      } catch (error) {
-        console.error(error);
-        setError("旅行情報を取得できませんでした");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTrip();
+      setTrip(data);
+    } catch (error) {
+      console.error(error);
+      setError("旅行情報を取得できませんでした");
+    } finally {
+      setIsLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    // Fetch updates state after the request resolves; this function is also reused by retry.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchTrip();
+  }, [fetchTrip]);
 
   const handleSuccess = () => {
     setIsSuccessModalOpen(true);
@@ -57,14 +61,25 @@ export default function EditTripPage() {
     );
   }
 
-  if (error || !trip) {
+  if (error) {
     return (
       <main className="min-h-screen bg-gray-50">
         <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-          <p className="text-sm text-red-500">{error ?? "旅行情報が見つかりませんでした"}</p>
+          <ErrorState
+            message={error}
+            onRetry={() => {
+              setIsLoading(true);
+              setError(null);
+              void fetchTrip();
+            }}
+          />
         </div>
       </main>
     );
+  }
+
+  if (!trip) {
+    return null;
   }
 
   return (

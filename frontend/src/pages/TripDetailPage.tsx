@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { ConfirmModal } from "../components/ConfirmModal";
+import { ErrorState } from "../components/ErrorState";
 import { SuccessModal } from "../components/SuccessModal";
 import { deleteTrip, getTrip } from "../api/trips";
 import { Trip } from "./TripListPage";
@@ -15,7 +16,8 @@ export default function TripDetailPage() {
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
@@ -23,25 +25,30 @@ export default function TripDetailPage() {
 
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    const fetchTrip = async () => {
-      if (!id) {
-        return;
-      }
+  const fetchTrip = useCallback(async () => {
+    if (!id) {
+      await Promise.resolve();
+      setFetchError("旅行IDを取得できませんでした");
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        const data = await getTrip(Number(id));
-        setTrip(data);
-      } catch (error) {
-        console.error(error);
-        setError("旅行情報を取得できませんでした");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTrip();
+    try {
+      const data = await getTrip(Number(id));
+      setTrip(data);
+    } catch (error) {
+      console.error(error);
+      setFetchError("旅行情報を取得できませんでした");
+    } finally {
+      setIsLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    // Fetch updates state after the request resolves; this function is also reused by retry.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchTrip();
+  }, [fetchTrip]);
 
   const handleDeleteConfirm = async () => {
     if (!trip) {
@@ -50,6 +57,7 @@ export default function TripDetailPage() {
 
     try {
       setIsDeleting(true);
+      setDeleteError(null);
 
       await deleteTrip(trip.id);
 
@@ -61,7 +69,7 @@ export default function TripDetailPage() {
       setIsDeleteCompleteOpen(true);
     } catch (error) {
       console.error(error);
-      setError("旅行の削除に失敗しました");
+      setDeleteError("旅行の削除に失敗しました。時間をおいて再度お試しください。");
     } finally {
       setIsDeleting(false);
     }
@@ -69,6 +77,7 @@ export default function TripDetailPage() {
 
   const handleDeleteCancel = () => {
     setIsDeleteConfirmOpen(false);
+    setDeleteError(null);
   };
 
   const handleDeleteComplete = () => {
@@ -79,8 +88,17 @@ export default function TripDetailPage() {
     return <p>読み込み中...</p>;
   }
 
-  if (error) {
-    return <p className="text-red-500">{error}</p>;
+  if (fetchError) {
+    return (
+      <ErrorState
+        message={fetchError}
+        onRetry={() => {
+          setIsLoading(true);
+          setFetchError(null);
+          void fetchTrip();
+        }}
+      />
+    );
   }
 
   if (!trip) {
@@ -128,7 +146,10 @@ export default function TripDetailPage() {
               {/* 削除ボタン */}
               <button
                 type="button"
-                onClick={() => setIsDeleteConfirmOpen(true)}
+                onClick={() => {
+                  setDeleteError(null);
+                  setIsDeleteConfirmOpen(true);
+                }}
                 className="rounded-lg p-2 text-red-400 hover:bg-red-50 hover:text-red-600"
                 aria-label="旅行を削除"
               >
@@ -155,6 +176,7 @@ export default function TripDetailPage() {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
         isLoading={isDeleting}
+        error={deleteError}
       />
 
       <SuccessModal

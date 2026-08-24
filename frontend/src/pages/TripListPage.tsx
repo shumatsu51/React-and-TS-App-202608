@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ErrorState } from "../components/ErrorState";
 import { TripCard } from "../components/TripCard";
 import { getTripStatus, type TripStatus } from "../utils/tripStatus";
 
@@ -34,29 +35,31 @@ export default function TripListPage() {
       statusFilter === "all" || getTripStatus(trip.start_date, trip.end_date).key === statusFilter
   );
 
-  useEffect(() => {
-    const fetchTrips = async () => {
-      try {
-        const response = await fetch("/api/trips", {
-          credentials: "include",
-        });
+  const fetchTrips = useCallback(async () => {
+    try {
+      const response = await fetch("/api/trips", {
+        credentials: "include",
+      });
 
-        if (!response.ok) {
-          throw new Error("旅行一覧の取得に失敗しました");
-        }
-
-        const data: Trip[] = await response.json();
-        setTrips(data);
-      } catch (error) {
-        console.error(error);
-        setError("旅行一覧を取得できませんでした");
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error("旅行一覧の取得に失敗しました");
       }
-    };
 
-    fetchTrips();
+      const data: Trip[] = await response.json();
+      setTrips(data);
+    } catch (error) {
+      console.error(error);
+      setError("旅行一覧を取得できませんでした");
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    // Fetch updates state after the request resolves; this function is also reused by retry.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchTrips();
+  }, [fetchTrips]);
 
   if (isLoading) {
     return (
@@ -71,9 +74,14 @@ export default function TripListPage() {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-        {error}
-      </div>
+      <ErrorState
+        message={error}
+        onRetry={() => {
+          setIsLoading(true);
+          setError(null);
+          void fetchTrips();
+        }}
+      />
     );
   }
 
