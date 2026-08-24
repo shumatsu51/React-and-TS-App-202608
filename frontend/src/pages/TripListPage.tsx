@@ -18,15 +18,23 @@ const statusFilters: { value: TripStatusFilter; label: string }[] = [
 export default function TripListPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [statusFilter, setStatusFilter] = useState<TripStatusFilter>("all");
+  const [keyword, setKeyword] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
-  const filteredTrips = trips.filter(
-    (trip) =>
-      statusFilter === "all" || getTripStatus(trip.start_date, trip.end_date).key === statusFilter
-  );
+  const normalizedKeyword = keyword.trim().toLocaleLowerCase();
+  const filteredTrips = trips.filter((trip) => {
+    const matchesStatus =
+      statusFilter === "all" || getTripStatus(trip.start_date, trip.end_date).key === statusFilter;
+    const matchesKeyword =
+      normalizedKeyword === "" ||
+      trip.title.toLocaleLowerCase().includes(normalizedKeyword) ||
+      trip.description?.toLocaleLowerCase().includes(normalizedKeyword);
+
+    return matchesStatus && matchesKeyword;
+  });
 
   const fetchTrips = useCallback(async () => {
     try {
@@ -73,26 +81,40 @@ export default function TripListPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="旅行ステータスで絞り込み">
-          {statusFilters.map((filter) => {
-            const isSelected = statusFilter === filter.value;
+        <div className="flex flex-1 flex-col gap-3">
+          <label className="sr-only" htmlFor="trip-keyword">
+            キーワードで旅行を検索
+          </label>
+          <input
+            id="trip-keyword"
+            type="search"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            placeholder="旅行名・説明文で検索"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-red-500 focus:ring-2 focus:ring-red-100 sm:max-w-md"
+          />
 
-            return (
-              <button
-                key={filter.value}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => setStatusFilter(filter.value)}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  isSelected
-                    ? "border-red-500 bg-red-500 text-white"
-                    : "border-gray-300 bg-white text-gray-600 hover:border-red-300 hover:text-red-600"
-                }`}
-              >
-                {filter.label}
-              </button>
-            );
-          })}
+          <div className="flex flex-wrap gap-2" role="group" aria-label="旅行ステータスで絞り込み">
+            {statusFilters.map((filter) => {
+              const isSelected = statusFilter === filter.value;
+
+              return (
+                <button
+                  key={filter.value}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => setStatusFilter(filter.value)}
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    isSelected
+                      ? "border-red-500 bg-red-500 text-white"
+                      : "border-gray-300 bg-white text-gray-600 hover:border-red-300 hover:text-red-600"
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* 一覧右上の作成ボタン */}
@@ -116,7 +138,7 @@ export default function TripListPage() {
         <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
           <h3 className="text-lg font-semibold text-gray-900">該当する旅行はありません</h3>
 
-          <p className="mt-2 text-sm text-gray-500">別のステータスを選択してください。</p>
+          <p className="mt-2 text-sm text-gray-500">検索キーワードまたはステータスを変更してください。</p>
         </div>
       ) : (
         /* カード一覧 */
