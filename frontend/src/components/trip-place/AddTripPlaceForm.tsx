@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 
 type Props = {
-  onAdd: (name: string) => Promise<void>;
+  onAdd: (name: string) => Promise<boolean>;
 };
 
 export const AddTripPlaceForm = ({ onAdd }: Props) => {
@@ -20,9 +20,11 @@ export const AddTripPlaceForm = ({ onAdd }: Props) => {
     try {
       setIsSubmitting(true);
 
-      await onAdd(trimmedName);
+      const isAdded = await onAdd(trimmedName);
 
-      setName("");
+      if (isAdded) {
+        setName("");
+      }
     } finally {
       setIsSubmitting(false);
     }

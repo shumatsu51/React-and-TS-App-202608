@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 
 import { useAuth } from "./context/useAuth";
 
@@ -56,12 +56,15 @@ export default function App() {
     <div className="min-h-screen bg-gray-50">
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">My trip, Your trip</h1>
+          <Link to="/trips" className="group cursor-pointer">
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 transition-colors group-hover:text-blue-600">
+              My trip, Your trip
+            </h1>
 
-            <p className="mt-1 text-sm text-gray-500">旅行の予定を管理しましょう</p>
-          </div>
-
+            <p className="mt-1 text-sm text-gray-500 transition-colors group-hover:text-gray-700">
+              旅行の予定を管理しましょう
+            </p>
+          </Link>
           {user?.email && (
             <div className="hidden rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-600 sm:block">
               {user.email}

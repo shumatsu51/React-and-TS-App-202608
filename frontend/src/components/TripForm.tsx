@@ -1,4 +1,4 @@
-import { type ChangeEvent, type FormEvent, useState } from "react";
+import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react";
 
 type TripFormData = {
   title: string;
@@ -12,6 +12,7 @@ type TripFormProps = {
   initialValues?: TripFormData;
   mode?: "create" | "edit";
   tripId?: number;
+  onDirtyChange?: (isDirty: boolean) => void;
 };
 
 type FormErrors = {
@@ -21,15 +22,48 @@ type FormErrors = {
   tripPeriod?: string;
 };
 
-export const TripForm = ({ onSuccess, initialValues, mode = "create", tripId }: TripFormProps) => {
+const getEndDateMax = (startDate: string) => {
+  if (!startDate) return undefined;
+
+  const [year, month, day] = startDate.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + 13));
+  return date.toISOString().slice(0, 10);
+};
+
+export const TripForm = ({
+  onSuccess,
+  initialValues,
+  mode = "create",
+  tripId,
+  onDirtyChange,
+}: TripFormProps) => {
   const [title, setTitle] = useState(initialValues?.title ?? "");
   const [startDate, setStartDate] = useState(initialValues?.startDate ?? "");
   const [endDate, setEndDate] = useState(initialValues?.endDate ?? "");
   const [description, setDescription] = useState(initialValues?.description ?? "");
+  const [savedValues, setSavedValues] = useState(() => ({
+    title: initialValues?.title ?? "",
+    startDate: initialValues?.startDate ?? "",
+    endDate: initialValues?.endDate ?? "",
+    description: initialValues?.description ?? "",
+  }));
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const isDirty = useMemo(
+    () =>
+      title !== savedValues.title ||
+      startDate !== savedValues.startDate ||
+      endDate !== savedValues.endDate ||
+      description !== savedValues.description,
+    [description, endDate, savedValues, startDate, title]
+  );
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -123,6 +157,7 @@ export const TripForm = ({ onSuccess, initialValues, mode = "create", tripId }: 
         );
       }
 
+      setSavedValues({ title, startDate, endDate, description });
       onSuccess();
     } catch (error) {
       console.error(error);
@@ -187,10 +222,22 @@ export const TripForm = ({ onSuccess, initialValues, mode = "create", tripId }: 
               id="startDate"
               type="date"
               value={startDate}
+              max={endDate || undefined}
               onChange={(e) => {
-                setStartDate(e.target.value);
+                const nextStartDate = e.target.value;
+                setStartDate(nextStartDate);
 
-                if (e.target.value) {
+                if (endDate && nextStartDate && endDate < nextStartDate) {
+                  setEndDate("");
+                  setErrors((prev) => ({
+                    ...prev,
+                    endDate: "開始日より前の終了日をクリアしました。終了日を選択してください。",
+                    tripPeriod: undefined,
+                  }));
+                  return;
+                }
+
+                if (nextStartDate) {
                   setErrors((prev) => ({
                     ...prev,
                     startDate: undefined,
@@ -214,6 +261,8 @@ export const TripForm = ({ onSuccess, initialValues, mode = "create", tripId }: 
               id="endDate"
               type="date"
               value={endDate}
+              min={startDate || undefined}
+              max={getEndDateMax(startDate)}
               onChange={(e) => {
                 setEndDate(e.target.value);
 

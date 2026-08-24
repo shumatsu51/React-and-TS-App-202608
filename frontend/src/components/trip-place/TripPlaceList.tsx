@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { ErrorState } from "../ErrorState";
 import { TripPlace } from "../../types/tripPlace";
 import {
   createTripPlace,
@@ -17,41 +18,64 @@ export const TripPlaceList = ({ tripId }: Props) => {
   const [places, setPlaces] = useState<TripPlace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [operationError, setOperationError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchPlaces = async () => {
-      try {
-        const data = await getTripPlaces(tripId);
-        setPlaces(data);
-      } catch (error) {
-        console.error(error);
-        setError("行きたい場所を取得できませんでした");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPlaces();
+  const fetchPlaces = useCallback(async () => {
+    try {
+      const data = await getTripPlaces(tripId);
+      setPlaces(data);
+    } catch (error) {
+      console.error(error);
+      setError("行きたい場所を取得できませんでした");
+    } finally {
+      setIsLoading(false);
+    }
   }, [tripId]);
 
-  const handleAdd = async (name: string) => {
-    const newPlace = await createTripPlace(tripId, name);
+  useEffect(() => {
+    // Fetch updates state after the request resolves; this function is also reused by retry.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchPlaces();
+  }, [fetchPlaces]);
 
-    setPlaces((prev) => [...prev, newPlace]);
+  const handleAdd = async (name: string) => {
+    try {
+      setOperationError(null);
+      const newPlace = await createTripPlace(tripId, name);
+
+      setPlaces((prev) => [...prev, newPlace]);
+      return true;
+    } catch (error) {
+      console.error(error);
+      setOperationError("場所を追加できませんでした。時間をおいて再度お試しください。");
+      return false;
+    }
   };
 
   const handleToggle = async (id: number, isVisited: boolean) => {
-    await updateTripPlace(id, isVisited);
+    try {
+      setOperationError(null);
+      await updateTripPlace(id, isVisited);
 
-    setPlaces((prev) =>
-      prev.map((place) => (place.id === id ? { ...place, is_visited: isVisited } : place))
-    );
+      setPlaces((prev) =>
+        prev.map((place) => (place.id === id ? { ...place, is_visited: isVisited } : place))
+      );
+    } catch (error) {
+      console.error(error);
+      setOperationError("訪問済み状態を更新できませんでした。もう一度お試しください。");
+    }
   };
 
   const handleDelete = async (id: number) => {
-    await deleteTripPlace(id);
+    try {
+      setOperationError(null);
+      await deleteTripPlace(id);
 
-    setPlaces((prev) => prev.filter((place) => place.id !== id));
+      setPlaces((prev) => prev.filter((place) => place.id !== id));
+    } catch (error) {
+      console.error(error);
+      setOperationError("場所を削除できませんでした。もう一度お試しください。");
+    }
   };
 
   if (isLoading) {
@@ -59,7 +83,18 @@ export const TripPlaceList = ({ tripId }: Props) => {
   }
 
   if (error) {
-    return <p className="text-sm text-red-500">{error}</p>;
+    return (
+      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <ErrorState
+          message={error}
+          onRetry={() => {
+            setIsLoading(true);
+            setError(null);
+            void fetchPlaces();
+          }}
+        />
+      </section>
+    );
   }
 
   return (
@@ -74,6 +109,12 @@ export const TripPlaceList = ({ tripId }: Props) => {
       <div className="mt-5">
         <AddTripPlaceForm onAdd={handleAdd} />
       </div>
+
+      {operationError && (
+        <p role="alert" className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+          {operationError}
+        </p>
+      )}
 
       <div className="mt-5 space-y-3">
         {places.length === 0 ? (

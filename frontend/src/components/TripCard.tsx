@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Trip } from "../pages/TripListPage";
 import { getTripStatus } from "../utils/tripStatus";
+import { getTripDuration } from "../utils/tripDuration";
 
 type Props = {
   trip: Trip;
@@ -10,6 +11,7 @@ export const TripCard = ({ trip }: Props) => {
   const navigate = useNavigate();
 
   const status = getTripStatus(trip.start_date, trip.end_date);
+  const duration = getTripDuration(trip.start_date, trip.end_date);
 
   return (
     <button
@@ -26,7 +28,7 @@ export const TripCard = ({ trip }: Props) => {
       </div>
 
       <p className="mt-2 text-sm text-gray-500">
-        {trip.start_date} ～ {trip.end_date}
+        {trip.start_date} ～ {trip.end_date} （{duration}日間）
       </p>
 
       {trip.description && (

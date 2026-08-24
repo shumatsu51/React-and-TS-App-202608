@@ -5,6 +5,7 @@ type ConfirmModalProps = {
   onConfirm: () => void;
   onCancel: () => void;
   isLoading?: boolean;
+  error?: string | null;
 };
 
 export const ConfirmModal = ({
@@ -14,6 +15,7 @@ export const ConfirmModal = ({
   onConfirm,
   onCancel,
   isLoading = false,
+  error,
 }: ConfirmModalProps) => {
   if (!isOpen) {
     return null;
@@ -25,6 +27,12 @@ export const ConfirmModal = ({
         <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
 
         <p className="mt-3 text-sm leading-6 text-gray-600">{message}</p>
+
+        {error && (
+          <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error}
+          </p>
+        )}
 
         <div className="mt-6 flex justify-end gap-3">
           <button
