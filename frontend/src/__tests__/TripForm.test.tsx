@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { TripForm } from "../components/TripForm";
@@ -9,6 +9,10 @@ const initialValues = {
   endDate: "2026-08-12",
   description: "夏休み",
 };
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("TripForm", () => {
   it("開始日に応じて終了日の選択範囲を設定する", () => {
@@ -41,6 +45,29 @@ describe("TripForm", () => {
 
     await waitFor(() => {
       expect(onDirtyChange).toHaveBeenLastCalledWith(true);
+    });
+  });
+
+  it("旅行期間外の旅程があるため更新できない場合、APIメッセージを表示する", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({
+          message: "旅行期間外になる旅程があります。先に旅程の日付を変更または削除してください",
+        }),
+      })
+    );
+    render(<TripForm initialValues={initialValues} mode="edit" tripId={1} onSuccess={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "変更を保存" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "旅行期間外になる旅程があります。先に旅程の日付を変更または削除してください"
+        )
+      ).toBeInTheDocument();
     });
   });
 });

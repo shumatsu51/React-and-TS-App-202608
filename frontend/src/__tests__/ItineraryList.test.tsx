@@ -68,4 +68,40 @@ describe("ItineraryList", () => {
       expect.objectContaining({ place_name: "錦市場" })
     );
   });
+
+  it("予定を編集すると表示内容を更新する", async () => {
+    itineraryApi.updateItineraryItem.mockResolvedValue({ ...existingItem, place_name: "八坂神社" });
+    render(<ItineraryList tripId={10} tripStartDate="2026-08-20" tripEndDate="2026-08-21" />);
+
+    await waitFor(() => expect(screen.getByText("清水寺")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "編集" }));
+    fireEvent.change(screen.getByLabelText("場所名"), { target: { value: "八坂神社" } });
+    fireEvent.click(screen.getByRole("button", { name: "変更を保存" }));
+
+    await waitFor(() => expect(screen.getByText("八坂神社")).toBeInTheDocument());
+  });
+
+  it("予定を削除すると確認後に一覧から除外する", async () => {
+    itineraryApi.deleteItineraryItem.mockResolvedValue(undefined);
+    render(<ItineraryList tripId={10} tripStartDate="2026-08-20" tripEndDate="2026-08-21" />);
+
+    await waitFor(() => expect(screen.getByText("清水寺")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "削除" }));
+    fireEvent.click(screen.getByRole("button", { name: "OK" }));
+
+    await waitFor(() => expect(screen.queryByText("清水寺")).not.toBeInTheDocument());
+    expect(itineraryApi.deleteItineraryItem).toHaveBeenCalledWith(1);
+  });
+
+  it("旅程取得に失敗した場合、再試行できる", async () => {
+    itineraryApi.getItineraryItems.mockRejectedValueOnce(new Error("network error"));
+    render(<ItineraryList tripId={10} tripStartDate="2026-08-20" tripEndDate="2026-08-21" />);
+
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent("旅程を取得できませんでした")
+    );
+    fireEvent.click(screen.getByRole("button", { name: "再試行" }));
+
+    await waitFor(() => expect(screen.getByText("清水寺")).toBeInTheDocument());
+  });
 });
