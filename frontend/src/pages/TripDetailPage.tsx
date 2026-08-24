@@ -7,6 +7,7 @@ import { SuccessModal } from "../components/SuccessModal";
 import { deleteTrip, getTrip } from "../api/trips";
 import { Trip } from "./TripListPage";
 import { TripPlaceList } from "../components/trip-place/TripPlaceList";
+import { ItineraryList } from "../components/itinerary/ItineraryList";
 import { getTripStatus } from "../utils/tripStatus";
 import { getTripDuration } from "../utils/tripDuration";
 
@@ -166,6 +167,11 @@ export default function TripDetailPage() {
             <p className="mt-4">{trip.description || "説明はありません"}</p>
           </div>
           {trip && <TripPlaceList tripId={trip.id} />}
+          <ItineraryList
+            tripId={trip.id}
+            tripStartDate={trip.start_date}
+            tripEndDate={trip.end_date}
+          />
         </div>
       </div>
 
