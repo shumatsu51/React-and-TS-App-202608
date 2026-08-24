@@ -7,7 +7,7 @@ import { ErrorState } from "../components/ErrorState";
 import { UnsavedChangesModal } from "../components/UnsavedChangesModal";
 import { getTrip } from "../api/trips";
 import { useBeforeUnloadWarning } from "../hooks/useBeforeUnloadWarning";
-import type { Trip } from "./TripListPage";
+import type { Trip } from "../types/trip";
 
 export default function EditTripPage() {
   const { id } = useParams();

@@ -5,7 +5,7 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { ErrorState } from "../components/ErrorState";
 import { SuccessModal } from "../components/SuccessModal";
 import { deleteTrip, getTrip } from "../api/trips";
-import { Trip } from "./TripListPage";
+import type { Trip } from "../types/trip";
 import { TripPlaceList } from "../components/trip-place/TripPlaceList";
 import { ItineraryList } from "../components/itinerary/ItineraryList";
 import { getTripStatus } from "../utils/tripStatus";
