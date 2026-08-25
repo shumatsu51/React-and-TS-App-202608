@@ -82,7 +82,7 @@ describe("TripListPage", () => {
       expect(screen.getByText("北海道旅行")).toBeInTheDocument();
     });
 
-    expect(container.firstChild).toHaveClass("flex", "h-[calc(100dvh-10rem)]", "flex-col");
+    expect(container.firstChild).toHaveClass("flex", "h-[calc(100dvh-8rem)]", "flex-col");
     expect(screen.getByText("北海道旅行").closest("div.overflow-y-auto")).toBeInTheDocument();
   });
 
