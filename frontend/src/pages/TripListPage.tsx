@@ -109,7 +109,7 @@ export default function TripListPage() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-10rem)] flex-col">
+    <div className="flex h-[calc(100dvh-8rem)] flex-col">
       <div className="shrink-0 border-b border-gray-200 bg-gray-50 pb-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 flex-col gap-3">

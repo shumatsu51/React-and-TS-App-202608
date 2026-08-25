@@ -10,6 +10,7 @@ import { TripPlaceList } from "../components/trip-place/TripPlaceList";
 import { ItineraryList } from "../components/itinerary/ItineraryList";
 import { getTripStatus } from "../utils/tripStatus";
 import { getTripDuration } from "../utils/tripDuration";
+import { PageHeader } from "../components/PageHeader";
 
 export default function TripDetailPage() {
   const { id } = useParams();
@@ -112,22 +113,14 @@ export default function TripDetailPage() {
 
   return (
     <>
-      <div className="mx-auto max-w-3xl">
-        <button
-          type="button"
-          onClick={() => navigate("/trips")}
-          className="text-sm text-gray-500 hover:text-gray-900"
-        >
-          ← 戻る
-        </button>
+      <PageHeader backLabel="旅行一覧" title="旅行の詳細" onBack={() => navigate("/trips")} />
 
-        <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="mx-auto max-w-3xl py-8 sm:py-12">
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-gray-500">旅行詳細</p>
-
-              <div className="mt-1 flex items-center gap-3">
-                <h1 className="text-3xl font-bold text-gray-900">{trip.title}</h1>
+              <div className="flex items-center gap-3">
+                <h2 className="text-3xl font-bold text-gray-900">{trip.title}</h2>
 
                 <span className={`rounded-full px-3 py-1 text-xs font-semibold ${className}`}>
                   {label}
