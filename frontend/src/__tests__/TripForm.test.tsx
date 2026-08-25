@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-import { TripForm } from "../components/TripForm";
+import { TripForm } from "../components/trip/TripForm";
 
 const initialValues = {
   title: "北海道旅行",

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ErrorState } from "../components/ErrorState";
-import { TripCard } from "../components/TripCard";
+import { ErrorState } from "../components/common/ErrorState";
+import { TripCard } from "../components/trip/TripCard";
 import { getTrips } from "../api/trips";
 import type { Trip } from "../types/trip";
 import { getTripStatus, type TripStatus } from "../utils/tripStatus";

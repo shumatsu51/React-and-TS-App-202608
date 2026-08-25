@@ -8,8 +8,8 @@ import {
   updateTripExpense,
 } from "../../api/tripExpenses";
 import type { TripExpense, TripExpenseInput, TripExpenseSummary } from "../../types/tripExpense";
-import { ConfirmModal } from "../ConfirmModal";
-import { ErrorState } from "../ErrorState";
+import { ConfirmModal } from "../common/ConfirmModal";
+import { ErrorState } from "../common/ErrorState";
 import { ExpenseForm } from "./ExpenseForm";
 import { ExpenseItem } from "./ExpenseItem";
 import { ExpenseSummary } from "./ExpenseSummary";

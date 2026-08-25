@@ -11,7 +11,7 @@ vi.mock("../api/auth", () => ({
 }));
 
 import * as authApi from "../api/auth";
-import AuthGate from "../components/AuthGate";
+import AuthGate from "../components/auth/AuthGate";
 import { AuthProvider } from "../context/AuthProvider";
 
 const mockUser: User = { id: 1, email: "test@example.com", created_at: "2026-01-01 00:00:00" };

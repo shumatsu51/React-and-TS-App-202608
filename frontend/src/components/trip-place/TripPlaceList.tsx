@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ErrorState } from "../ErrorState";
+import { ErrorState } from "../common/ErrorState";
 import { TripPlace } from "../../types/tripPlace";
 import {
   createTripPlace,
