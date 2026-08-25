@@ -7,6 +7,7 @@ import dbHealth from "./routes/db-health.js";
 import trips from "./routes/trips.js";
 import tripPlaces from "./routes/trip-places.js";
 import itineraryItems from "./routes/itinerary-items.js";
+import tripExpenses from "./routes/trip-expenses.js";
 
 const app = new Hono();
 
@@ -29,6 +30,7 @@ app.route("/api/db-health", dbHealth);
 app.route("/api/trips", trips);
 app.route("/api/trip-places", tripPlaces);
 app.route("/api/itinerary-items", itineraryItems);
+app.route("/api/trip-expenses", tripExpenses);
 
 // サーバーの起動
 const port = Number(process.env.PORT ?? 3000);
