@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS trips (
   start_date  DATE         NOT NULL,
   end_date    DATE         NOT NULL,
   description TEXT,
+  budget_amount BIGINT UNSIGNED,
   created_at  DATETIME     DEFAULT CURRENT_TIMESTAMP,
   updated_at  DATETIME     DEFAULT CURRENT_TIMESTAMP
   ON UPDATE CURRENT_TIMESTAMP,
@@ -89,4 +90,26 @@ CREATE TABLE itinerary_items (
     FOREIGN KEY (trip_place_id)
     REFERENCES trip_places(id)
     ON DELETE SET NULL
+);
+
+CREATE TABLE trip_expenses (
+  id             INT NOT NULL AUTO_INCREMENT,
+  trip_id        INT NOT NULL,
+  description    VARCHAR(100) NOT NULL,
+  category       VARCHAR(30) NOT NULL,
+  amount         BIGINT UNSIGNED NOT NULL,
+  payment_status VARCHAR(20) NOT NULL,
+  paid_at        DATE,
+  memo           TEXT,
+  created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                 ON UPDATE CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (id),
+  KEY idx_trip_expenses_trip_category (trip_id, category),
+
+  CONSTRAINT fk_trip_expenses_trip
+    FOREIGN KEY (trip_id)
+    REFERENCES trips(id)
+    ON DELETE CASCADE
 );
