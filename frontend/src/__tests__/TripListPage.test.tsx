@@ -75,6 +75,17 @@ describe("TripListPage", () => {
     ]);
   });
 
+  it("操作パネルを固定し、旅行カード領域だけをスクロール可能にする", async () => {
+    const { container } = renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("北海道旅行")).toBeInTheDocument();
+    });
+
+    expect(container.firstChild).toHaveClass("flex", "h-[calc(100dvh-10rem)]", "flex-col");
+    expect(screen.getByText("北海道旅行").closest("div.overflow-y-auto")).toBeInTheDocument();
+  });
+
   it("選択したステータスに該当する旅行だけを表示する", async () => {
     renderPage();
 
