@@ -91,6 +91,7 @@ describe("EditTripPage", () => {
     renderPage();
 
     await waitFor(() => expect(screen.getByLabelText(/旅行名/)).toHaveValue("京都旅行"));
+    fireEvent.change(screen.getByLabelText(/旅行名/), { target: { value: "秋の京都旅行" } });
     fireEvent.click(screen.getByRole("button", { name: "変更を保存" }));
 
     await waitFor(() => {
