@@ -65,6 +65,8 @@ export const TripForm = ({
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
 
+  const isSaveDisabled = isSubmitting || (mode === "edit" && !isDirty);
+
   const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
 
@@ -118,6 +120,10 @@ export const TripForm = ({
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (mode === "edit" && !isDirty) {
+      return;
+    }
 
     if (!validate()) {
       return;
@@ -204,10 +210,16 @@ export const TripForm = ({
             value={title}
             onChange={handleTitleChange}
             placeholder="例：秋の京都・大阪旅行"
+            aria-describedby={errors.title ? "title-error" : undefined}
+            aria-invalid={Boolean(errors.title)}
             className={inputClassName}
           />
 
-          {errors.title && <p className="mt-2 text-sm text-red-500">{errors.title}</p>}
+          {errors.title && (
+            <p id="title-error" role="alert" className="mt-2 text-sm text-red-500">
+              {errors.title}
+            </p>
+          )}
         </div>
 
         {/* 開始日・終了日 */}
@@ -245,10 +257,25 @@ export const TripForm = ({
                   }));
                 }
               }}
+              aria-describedby={
+                errors.startDate || errors.tripPeriod
+                  ? [
+                      errors.startDate && "start-date-error",
+                      errors.tripPeriod && "trip-period-error",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")
+                  : undefined
+              }
+              aria-invalid={Boolean(errors.startDate || errors.tripPeriod)}
               className={inputClassName}
             />
 
-            {errors.startDate && <p className="mt-2 text-sm text-red-500">{errors.startDate}</p>}
+            {errors.startDate && (
+              <p id="start-date-error" role="alert" className="mt-2 text-sm text-red-500">
+                {errors.startDate}
+              </p>
+            )}
           </div>
 
           <div>
@@ -274,17 +301,31 @@ export const TripForm = ({
                   }));
                 }
               }}
+              aria-describedby={
+                errors.endDate || errors.tripPeriod
+                  ? [errors.endDate && "end-date-error", errors.tripPeriod && "trip-period-error"]
+                      .filter(Boolean)
+                      .join(" ")
+                  : undefined
+              }
+              aria-invalid={Boolean(errors.endDate || errors.tripPeriod)}
               className={inputClassName}
             />
 
-            {errors.endDate && <p className="mt-2 text-sm text-red-500">{errors.endDate}</p>}
+            {errors.endDate && (
+              <p id="end-date-error" role="alert" className="mt-2 text-sm text-red-500">
+                {errors.endDate}
+              </p>
+            )}
           </div>
         </div>
 
         {/* 旅行期間エラー */}
         {errors.tripPeriod && (
           <div className="rounded-lg bg-red-50 px-4 py-3">
-            <p className="text-sm font-medium text-red-600">{errors.tripPeriod}</p>
+            <p id="trip-period-error" role="alert" className="text-sm font-medium text-red-600">
+              {errors.tripPeriod}
+            </p>
           </div>
         )}
 
@@ -313,14 +354,20 @@ export const TripForm = ({
         {/* API送信エラー */}
         {submitError && (
           <div className="rounded-lg bg-red-50 px-4 py-3">
-            <p className="text-sm font-medium text-red-600">{submitError}</p>
+            <p
+              id="trip-form-submit-error"
+              role="alert"
+              className="text-sm font-medium text-red-600"
+            >
+              {submitError}
+            </p>
           </div>
         )}
       </div>
       {/* 送信ボタン */}
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSaveDisabled}
         className="rounded-lg bg-gray-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isSubmitting
@@ -328,7 +375,9 @@ export const TripForm = ({
             ? "更新中..."
             : "登録中..."
           : mode === "edit"
-            ? "変更を保存"
+            ? isDirty
+              ? "変更を保存"
+              : "変更なし"
             : "旅行を作成"}
       </button>
     </form>

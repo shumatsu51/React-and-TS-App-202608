@@ -8,6 +8,7 @@ import { UnsavedChangesModal } from "../components/UnsavedChangesModal";
 import { getTrip } from "../api/trips";
 import { useBeforeUnloadWarning } from "../hooks/useBeforeUnloadWarning";
 import type { Trip } from "../types/trip";
+import { PageHeader } from "../components/PageHeader";
 
 export default function EditTripPage() {
   const { id } = useParams();
@@ -63,28 +64,24 @@ export default function EditTripPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-gray-50">
-        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-          <p className="text-sm text-gray-500">読み込み中...</p>
-        </div>
-      </main>
+      <div className="mx-auto max-w-3xl py-8 sm:py-12">
+        <p className="text-sm text-gray-500">読み込み中...</p>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50">
-        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-          <ErrorState
-            message={error}
-            onRetry={() => {
-              setIsLoading(true);
-              setError(null);
-              void fetchTrip();
-            }}
-          />
-        </div>
-      </main>
+      <div className="mx-auto max-w-3xl py-8 sm:py-12">
+        <ErrorState
+          message={error}
+          onRetry={() => {
+            setIsLoading(true);
+            setError(null);
+            void fetchTrip();
+          }}
+        />
+      </div>
     );
   }
 
@@ -93,24 +90,14 @@ export default function EditTripPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="inline-flex items-center text-sm font-medium text-gray-500 transition hover:text-gray-900"
-        >
-          ← 旅行詳細に戻る
-        </button>
-
-        <div className="mt-6 mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-            旅行情報を編集
-          </h1>
-
-          <p className="mt-2 text-sm leading-6 text-gray-500">登録済みの旅行情報を変更します。</p>
-        </div>
-
+    <>
+      <PageHeader
+        backLabel="旅行の詳細"
+        title="旅行を編集"
+        description="登録した旅行の情報を変更します。"
+        onBack={handleBack}
+      />
+      <div className="mx-auto max-w-3xl py-8 sm:py-12">
         <TripForm
           mode="edit"
           tripId={trip.id}
@@ -136,6 +123,6 @@ export default function EditTripPage() {
         onCancel={() => blocker.reset?.()}
         onConfirm={() => blocker.proceed?.()}
       />
-    </main>
+    </>
   );
 }

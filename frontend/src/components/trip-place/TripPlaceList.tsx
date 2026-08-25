@@ -20,6 +20,8 @@ export const TripPlaceList = ({ tripId }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
 
+  const visitedCount = places.filter((place) => place.is_visited).length;
+
   const fetchPlaces = useCallback(async () => {
     try {
       const data = await getTripPlaces(tripId);
@@ -100,7 +102,12 @@ export const TripPlaceList = ({ tripId }: Props) => {
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">行きたい場所</h2>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 className="text-lg font-semibold text-gray-900">行きたい場所</h2>
+          <p className="text-sm font-medium text-gray-700" aria-live="polite">
+            {visitedCount} / {places.length}件訪問済み
+          </p>
+        </div>
         <p className="mt-1 text-sm text-gray-500">
           気になる場所を追加して、訪れたらチェックしましょう。
         </p>

@@ -52,7 +52,7 @@ describe("AuthGate", () => {
     await waitFor(() => {
       expect(screen.getByText("protected content")).toBeInTheDocument();
     });
-    expect(screen.getByText(mockUser.email)).toBeInTheDocument();
+    expect(screen.queryByText(mockUser.email)).not.toBeInTheDocument();
   });
 
   it("ログインに成功すると children を表示する", async () => {

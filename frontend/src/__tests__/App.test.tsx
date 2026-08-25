@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
+
+const { mockLogout } = vi.hoisted(() => ({ mockLogout: vi.fn() }));
 
 vi.mock("../context/useAuth", () => ({
   useAuth: () => ({
@@ -8,13 +11,14 @@ vi.mock("../context/useAuth", () => ({
     isLoading: false,
     login: vi.fn(),
     signup: vi.fn(),
-    logout: vi.fn(),
+    logout: mockLogout,
   }),
 }));
 
 import App from "../App";
 
 beforeEach(() => {
+  mockLogout.mockClear();
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue({
@@ -29,15 +33,22 @@ afterEach(() => {
 });
 
 describe("App", () => {
-  it("ログイン中のユーザーのメールアドレスを表示する", async () => {
+  it("アカウントアイコンからメールアドレスとログアウト操作を表示できる", async () => {
+    const user = userEvent.setup();
     render(
       <MemoryRouter>
         <App />
       </MemoryRouter>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/test@example.com/)).toBeInTheDocument();
-    });
+    await screen.findByRole("button", { name: "アカウントメニューを開く" });
+    expect(screen.queryByText("test@example.com")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "アカウントメニューを開く" }));
+    expect(screen.getByRole("menu", { name: "アカウントメニュー" })).toBeInTheDocument();
+    expect(screen.getByText("test@example.com")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("menuitem", { name: "ログアウト" }));
+    expect(mockLogout).toHaveBeenCalledOnce();
   });
 });

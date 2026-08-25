@@ -15,18 +15,56 @@ const statusFilters: { value: TripStatusFilter; label: string }[] = [
   { value: "completed", label: "終了済み" },
 ];
 
+const statusPriority: Record<TripStatus, number> = {
+  ongoing: 0,
+  upcoming: 1,
+  completed: 2,
+};
+
 export default function TripListPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [statusFilter, setStatusFilter] = useState<TripStatusFilter>("all");
+  const [keyword, setKeyword] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
-  const filteredTrips = trips.filter(
-    (trip) =>
-      statusFilter === "all" || getTripStatus(trip.start_date, trip.end_date).key === statusFilter
-  );
+  const normalizedKeyword = keyword.trim().toLocaleLowerCase();
+  const keywordMatchedTrips = trips.filter((trip) => {
+    const matchesKeyword =
+      normalizedKeyword === "" ||
+      trip.title.toLocaleLowerCase().includes(normalizedKeyword) ||
+      trip.description?.toLocaleLowerCase().includes(normalizedKeyword);
+
+    return matchesKeyword;
+  });
+  const statusCounts: Record<TripStatusFilter, number> = {
+    all: keywordMatchedTrips.length,
+    upcoming: 0,
+    ongoing: 0,
+    completed: 0,
+  };
+
+  keywordMatchedTrips.forEach((trip) => {
+    statusCounts[getTripStatus(trip.start_date, trip.end_date).key] += 1;
+  });
+
+  const filteredTrips = keywordMatchedTrips
+    .filter(
+      (trip) =>
+        statusFilter === "all" || getTripStatus(trip.start_date, trip.end_date).key === statusFilter
+    )
+    .sort((firstTrip, secondTrip) => {
+      if (statusFilter !== "all") {
+        return 0;
+      }
+
+      return (
+        statusPriority[getTripStatus(firstTrip.start_date, firstTrip.end_date).key] -
+        statusPriority[getTripStatus(secondTrip.start_date, secondTrip.end_date).key]
+      );
+    });
 
   const fetchTrips = useCallback(async () => {
     try {
@@ -71,61 +109,81 @@ export default function TripListPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="旅行ステータスで絞り込み">
-          {statusFilters.map((filter) => {
-            const isSelected = statusFilter === filter.value;
+    <div className="flex h-[calc(100dvh-8rem)] flex-col">
+      <div className="shrink-0 border-b border-gray-200 bg-gray-50 pb-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-1 flex-col gap-3">
+          <label className="sr-only" htmlFor="trip-keyword">
+            キーワードで旅行を検索
+          </label>
+          <input
+            id="trip-keyword"
+            type="search"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            placeholder="旅行名・説明文で検索"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-red-500 focus:ring-2 focus:ring-red-100 sm:max-w-md"
+          />
 
-            return (
-              <button
-                key={filter.value}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => setStatusFilter(filter.value)}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  isSelected
-                    ? "border-red-500 bg-red-500 text-white"
-                    : "border-gray-300 bg-white text-gray-600 hover:border-red-300 hover:text-red-600"
-                }`}
-              >
-                {filter.label}
-              </button>
-            );
-          })}
+          <div className="flex flex-wrap gap-2" role="group" aria-label="旅行ステータスで絞り込み">
+            {statusFilters.map((filter) => {
+              const isSelected = statusFilter === filter.value;
+              const count = statusCounts[filter.value];
+
+              return (
+                <button
+                  key={filter.value}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => setStatusFilter(filter.value)}
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    isSelected
+                      ? "border-red-500 bg-red-500 text-white"
+                      : "border-gray-300 bg-white text-gray-600 hover:border-red-300 hover:text-red-600"
+                  }`}
+                >
+                  {filter.label}
+                  <span aria-hidden="true">（{count}）</span>
+                </button>
+              );
+            })}
+          </div>
+          </div>
+
+          {/* 一覧右上の作成ボタン */}
+          <button
+            type="button"
+            onClick={() => navigate("/trips/new")}
+            className="shrink-0 rounded-lg bg-red-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-600"
+          >
+            +旅行を作成
+          </button>
         </div>
-
-        {/* 一覧右上の作成ボタン */}
-        <button
-          type="button"
-          onClick={() => navigate("/trips/new")}
-          className="rounded-lg bg-red-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-600"
-        >
-          +旅行を作成
-        </button>
       </div>
 
-      {/* 旅行が0件の場合 */}
-      {trips.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
-          <h3 className="text-lg font-semibold text-gray-900">旅行がまだありません</h3>
+      <div className="min-h-0 flex-1 overflow-y-auto py-6 pr-1">
+        {/* 旅行が0件の場合 */}
+        {trips.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
+            <h3 className="text-lg font-semibold text-gray-900">旅行がまだありません</h3>
 
-          <p className="mt-2 text-sm text-gray-500">新しい旅行を登録すると、ここに表示されます。</p>
-        </div>
-      ) : filteredTrips.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
-          <h3 className="text-lg font-semibold text-gray-900">該当する旅行はありません</h3>
+            <p className="mt-2 text-sm text-gray-500">新しい旅行を登録すると、ここに表示されます。</p>
+          </div>
+        ) : filteredTrips.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
+            <h3 className="text-lg font-semibold text-gray-900">該当する旅行はありません</h3>
 
-          <p className="mt-2 text-sm text-gray-500">別のステータスを選択してください。</p>
-        </div>
-      ) : (
-        /* カード一覧 */
-        <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredTrips.map((trip) => (
-            <TripCard key={trip.id} trip={trip} />
-          ))}
-        </div>
-      )}
+            <p className="mt-2 text-sm text-gray-500">検索キーワードまたはステータスを変更してください。</p>
+          </div>
+        ) : (
+          /* カード一覧 */
+          <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredTrips.map((trip) => (
+              <TripCard key={trip.id} trip={trip} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

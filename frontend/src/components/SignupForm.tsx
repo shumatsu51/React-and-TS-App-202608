@@ -28,24 +28,42 @@ const SignupForm = ({ onSwitchToLogin }: Props) => {
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 max-w-sm mx-auto">
       <h2 className="text-xl font-bold text-gray-800 text-center">新規登録</h2>
+      <label htmlFor="signup-email" className="sr-only">
+        メールアドレス
+      </label>
       <input
+        id="signup-email"
         type="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="メールアドレス"
         required
+        autoComplete="email"
+        aria-describedby={error ? "signup-form-error" : undefined}
+        aria-invalid={Boolean(error)}
         className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
       />
+      <label htmlFor="signup-password" className="sr-only">
+        パスワード
+      </label>
       <input
+        id="signup-password"
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="パスワード（8文字以上）"
         required
         minLength={8}
+        autoComplete="new-password"
+        aria-describedby={error ? "signup-form-error" : undefined}
+        aria-invalid={Boolean(error)}
         className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
       />
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && (
+        <p id="signup-form-error" role="alert" className="text-xs text-red-500">
+          {error}
+        </p>
+      )}
       <button
         type="submit"
         disabled={isLoading}

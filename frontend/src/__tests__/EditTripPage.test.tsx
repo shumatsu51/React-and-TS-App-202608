@@ -73,7 +73,7 @@ describe("EditTripPage", () => {
 
     await waitFor(() => expect(screen.getByLabelText(/旅行名/)).toHaveValue("京都旅行"));
     fireEvent.change(screen.getByLabelText(/旅行名/), { target: { value: "秋の京都旅行" } });
-    fireEvent.click(screen.getByRole("button", { name: "← 旅行詳細に戻る" }));
+    fireEvent.click(screen.getByRole("button", { name: "← 旅行の詳細" }));
 
     expect(screen.getByRole("dialog")).toHaveTextContent("未保存の変更があります");
   });
@@ -91,6 +91,7 @@ describe("EditTripPage", () => {
     renderPage();
 
     await waitFor(() => expect(screen.getByLabelText(/旅行名/)).toHaveValue("京都旅行"));
+    fireEvent.change(screen.getByLabelText(/旅行名/), { target: { value: "秋の京都旅行" } });
     fireEvent.click(screen.getByRole("button", { name: "変更を保存" }));
 
     await waitFor(() => {
@@ -100,5 +101,15 @@ describe("EditTripPage", () => {
         )
       ).toBeInTheDocument();
     });
+  });
+
+  it("固定ページヘッダーに統一された見出しを表示する", async () => {
+    renderPage();
+
+    await screen.findByRole("heading", { level: 1, name: "旅行を編集" });
+    expect(screen.getByText("登録した旅行の情報を変更します。")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 }).closest("div.sticky")).toHaveClass(
+      "top-24"
+    );
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 
 import { useAuth } from "./context/useAuth";
@@ -9,10 +9,12 @@ type HealthResponse = {
 };
 
 export default function App() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchHealth = async () => {
@@ -34,6 +36,20 @@ export default function App() {
     fetchHealth();
   }, []);
 
+  useEffect(() => {
+    const closeMenuWhenClickOutside = (event: MouseEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) {
+        setIsAccountMenuOpen(false);
+      }
+    };
+
+    if (isAccountMenuOpen) {
+      document.addEventListener("mousedown", closeMenuWhenClickOutside);
+    }
+
+    return () => document.removeEventListener("mousedown", closeMenuWhenClickOutside);
+  }, [isAccountMenuOpen]);
+
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
@@ -54,8 +70,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
+      <header className="fixed top-0 left-0 right-0 z-50 h-24 border-b border-gray-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex h-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/trips" className="group cursor-pointer">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 transition-colors group-hover:text-blue-600">
               My trip, Your trip
@@ -65,15 +81,54 @@ export default function App() {
               旅行の予定を管理しましょう
             </p>
           </Link>
-          {user?.email && (
-            <div className="hidden rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-600 sm:block">
-              {user.email}
+          {user && (
+            <div
+              ref={accountMenuRef}
+              className="relative"
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  setIsAccountMenuOpen(false);
+                }
+              }}
+            >
+              <button
+                type="button"
+                aria-label="アカウントメニューを開く"
+                aria-expanded={isAccountMenuOpen}
+                aria-controls="account-menu"
+                onClick={() => setIsAccountMenuOpen((isOpen) => !isOpen)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2">
+                  <circle cx="12" cy="8" r="3.25" />
+                  <path d="M5.5 20c.6-3.2 3.2-5 6.5-5s5.9 1.8 6.5 5" />
+                </svg>
+              </button>
+
+              {isAccountMenuOpen && (
+                <div
+                  id="account-menu"
+                  role="menu"
+                  aria-label="アカウントメニュー"
+                  className="absolute right-0 z-50 mt-2 w-64 rounded-xl border border-gray-200 bg-white p-2 shadow-lg"
+                >
+                  <p className="break-all px-3 py-2 text-sm text-gray-600">{user.email}</p>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => void logout()}
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    ログアウト
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 pt-32 pb-10 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-6xl px-4 pt-24 pb-10 sm:px-6 lg:px-8">
         <Outlet />
       </main>
     </div>

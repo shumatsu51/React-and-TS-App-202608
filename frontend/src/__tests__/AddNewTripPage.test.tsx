@@ -21,7 +21,7 @@ describe("AddNewTripPage", () => {
     render(<RouterProvider router={router} />);
 
     fireEvent.change(screen.getByLabelText(/旅行名/), { target: { value: "沖縄旅行" } });
-    fireEvent.click(screen.getByRole("button", { name: "← 旅行一覧に戻る" }));
+    fireEvent.click(screen.getByRole("button", { name: "← 旅行一覧" }));
 
     expect(screen.getByRole("dialog")).toHaveTextContent("未保存の変更があります");
   });
@@ -43,5 +43,19 @@ describe("AddNewTripPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "旅行を作成" }));
 
     await waitFor(() => expect(screen.getByText("✅旅行情報を登録しました")).toBeInTheDocument());
+  });
+
+  it("固定ページヘッダーに統一された見出しを表示する", () => {
+    const router = createMemoryRouter([{ path: "/trips/new", element: <AddNewTripPage /> }], {
+      initialEntries: ["/trips/new"],
+    });
+
+    render(<RouterProvider router={router} />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "旅行を作成" })).toBeInTheDocument();
+    expect(screen.getByText("新しい旅行の情報を登録します。")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 }).closest("div.sticky")).toHaveClass(
+      "top-24"
+    );
   });
 });
