@@ -52,3 +52,18 @@ export const deleteItineraryItem = async (itemId: number): Promise<void> => {
   });
   if (!response.ok) throw new Error(await getErrorMessage(response, "旅程の削除に失敗しました"));
 };
+
+export const reorderItineraryItems = async (
+  tripId: number,
+  scheduledDate: string,
+  itemIds: number[]
+): Promise<void> => {
+  const response = await fetch(`${BASE_URL}/trips/${tripId}/order`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ scheduled_date: scheduledDate, item_ids: itemIds }),
+  });
+  if (!response.ok)
+    throw new Error(await getErrorMessage(response, "旅程の並び替えに失敗しました"));
+};

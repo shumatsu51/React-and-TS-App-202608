@@ -6,6 +6,7 @@ import {
   createItineraryItem,
   deleteItineraryItem,
   getItineraryItems,
+  reorderItineraryItems,
   updateItineraryItem,
 } from "../../api/itineraryItems";
 import { getTripPlaces } from "../../api/tripPlaces";
@@ -49,7 +50,6 @@ const sortItems = (items: ItineraryItem[]) =>
   [...items].sort(
     (first, second) =>
       first.scheduled_date.localeCompare(second.scheduled_date) ||
-      (first.start_time ?? "99:99:99").localeCompare(second.start_time ?? "99:99:99") ||
       first.sort_order - second.sort_order ||
       first.id - second.id
   );
@@ -63,6 +63,7 @@ export const ItineraryList = ({ tripId, tripStartDate, tripEndDate }: Props) => 
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<ItineraryItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [reorderingDate, setReorderingDate] = useState<string | null>(null);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -135,6 +136,46 @@ export const ItineraryList = ({ tripId, tripStartDate, tripEndDate }: Props) => 
       setActionError(error instanceof Error ? error.message : "旅程の削除に失敗しました");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleMove = async (scheduledDate: string, itemId: number, direction: -1 | 1) => {
+    const dayItems = sortItems(items.filter((item) => item.scheduled_date === scheduledDate));
+    const currentIndex = dayItems.findIndex((item) => item.id === itemId);
+    const targetIndex = currentIndex + direction;
+
+    if (currentIndex === -1 || targetIndex < 0 || targetIndex >= dayItems.length) return;
+
+    const reorderedDayItems = [...dayItems];
+    [reorderedDayItems[currentIndex], reorderedDayItems[targetIndex]] = [
+      reorderedDayItems[targetIndex],
+      reorderedDayItems[currentIndex],
+    ];
+
+    try {
+      setReorderingDate(scheduledDate);
+      setActionError(null);
+      await reorderItineraryItems(
+        tripId,
+        scheduledDate,
+        reorderedDayItems.map((item) => item.id)
+      );
+
+      const sortOrderById = new Map(reorderedDayItems.map((item, index) => [item.id, index + 1]));
+      setItems((previous) =>
+        sortItems(
+          previous.map((item) =>
+            item.scheduled_date === scheduledDate
+              ? { ...item, sort_order: sortOrderById.get(item.id) ?? item.sort_order }
+              : item
+          )
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      setActionError(error instanceof Error ? error.message : "旅程の並び替えに失敗しました");
+    } finally {
+      setReorderingDate(null);
     }
   };
 
@@ -213,6 +254,12 @@ export const ItineraryList = ({ tripId, tripStartDate, tripEndDate }: Props) => 
                       places={places}
                       onUpdate={handleUpdate}
                       onDelete={setItemToDelete}
+                      onMoveUp={() => void handleMove(date, item.id, -1)}
+                      onMoveDown={() => void handleMove(date, item.id, 1)}
+                      isMoveUpDisabled={dayItems[0].id === item.id || reorderingDate === date}
+                      isMoveDownDisabled={
+                        dayItems[dayItems.length - 1].id === item.id || reorderingDate === date
+                      }
                     />
                   ))
                 )}

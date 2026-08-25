@@ -23,6 +23,11 @@ type ItineraryItemBody = {
   memo?: unknown;
 };
 
+type ReorderBody = {
+  scheduled_date?: unknown;
+  item_ids?: unknown;
+};
+
 type ValidatedItineraryItem = {
   scheduledDate: string;
   startTime: string | null;
@@ -122,6 +127,36 @@ const validateBody = async (
   };
 };
 
+const findOverlappingItem = async (
+  tripId: number,
+  scheduledDate: string,
+  startTime: string | null,
+  endTime: string | null,
+  excludedItemId?: number
+) => {
+  if (!startTime || !endTime) {
+    return null;
+  }
+
+  const [rows] = await pool.query<mysql.RowDataPacket[]>(
+    `
+      SELECT id, place_name
+      FROM itinerary_items
+      WHERE trip_id = ?
+        AND scheduled_date = ?
+        AND start_time IS NOT NULL
+        AND end_time IS NOT NULL
+        AND (? IS NULL OR id != ?)
+        AND start_time < ?
+        AND end_time > ?
+      LIMIT 1
+    `,
+    [tripId, scheduledDate, excludedItemId ?? null, excludedItemId ?? null, endTime, startTime]
+  );
+
+  return rows[0] ?? null;
+};
+
 // GET /api/itinerary-items/trips/:tripId
 itineraryItems.get("/trips/:tripId", async (c) => {
   try {
@@ -141,7 +176,7 @@ itineraryItems.get("/trips/:tripId", async (c) => {
         SELECT id, trip_id, scheduled_date, start_time, end_time, place_name, trip_place_id, memo, sort_order
         FROM itinerary_items
         WHERE trip_id = ?
-        ORDER BY scheduled_date, start_time IS NULL, start_time, sort_order, id
+        ORDER BY scheduled_date, sort_order, id
       `,
       [tripId]
     );
@@ -174,6 +209,16 @@ itineraryItems.post("/trips/:tripId", async (c) => {
     }
 
     const value = validated.value;
+    const overlappingItem = await findOverlappingItem(
+      tripId,
+      value.scheduledDate,
+      value.startTime,
+      value.endTime
+    );
+    if (overlappingItem) {
+      return c.json({ message: `「${overlappingItem.place_name}」と時間が重複しています` }, 409);
+    }
+
     const [orderRows] = await pool.query<mysql.RowDataPacket[]>(
       "SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM itinerary_items WHERE trip_id = ? AND scheduled_date = ?",
       [tripId, value.scheduledDate]
@@ -229,7 +274,7 @@ itineraryItems.put("/:id", async (c) => {
     }
 
     const [itemRows] = await pool.query<mysql.RowDataPacket[]>(
-      `SELECT ii.id, ii.trip_id, ii.sort_order FROM itinerary_items ii INNER JOIN trips t ON ii.trip_id = t.id WHERE ii.id = ? AND t.user_id = ?`,
+      `SELECT ii.id, ii.trip_id, ii.scheduled_date, ii.sort_order FROM itinerary_items ii INNER JOIN trips t ON ii.trip_id = t.id WHERE ii.id = ? AND t.user_id = ?`,
       [itemId, userId]
     );
     if (itemRows.length === 0) {
@@ -247,8 +292,28 @@ itineraryItems.put("/:id", async (c) => {
     }
 
     const value = validated.value;
+    const overlappingItem = await findOverlappingItem(
+      trip.id,
+      value.scheduledDate,
+      value.startTime,
+      value.endTime,
+      itemId
+    );
+    if (overlappingItem) {
+      return c.json({ message: `「${overlappingItem.place_name}」と時間が重複しています` }, 409);
+    }
+
+    let sortOrder = Number(itemRows[0].sort_order);
+    if (itemRows[0].scheduled_date !== value.scheduledDate) {
+      const [orderRows] = await pool.query<mysql.RowDataPacket[]>(
+        "SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM itinerary_items WHERE trip_id = ? AND scheduled_date = ?",
+        [trip.id, value.scheduledDate]
+      );
+      sortOrder = Number(orderRows[0].next_order);
+    }
+
     await pool.query(
-      `UPDATE itinerary_items SET scheduled_date = ?, start_time = ?, end_time = ?, place_name = ?, trip_place_id = ?, memo = ? WHERE id = ?`,
+      `UPDATE itinerary_items SET scheduled_date = ?, start_time = ?, end_time = ?, place_name = ?, trip_place_id = ?, memo = ?, sort_order = ? WHERE id = ?`,
       [
         value.scheduledDate,
         value.startTime,
@@ -256,6 +321,7 @@ itineraryItems.put("/:id", async (c) => {
         value.placeName,
         value.tripPlaceId,
         value.memo,
+        sortOrder,
         itemId,
       ]
     );
@@ -269,11 +335,82 @@ itineraryItems.put("/:id", async (c) => {
       place_name: value.placeName,
       trip_place_id: value.tripPlaceId,
       memo: value.memo,
-      sort_order: itemRows[0].sort_order,
+      sort_order: sortOrder,
     });
   } catch (error) {
     console.error(error);
     return c.json({ message: "旅程の更新に失敗しました" }, 500);
+  }
+});
+
+// PUT /api/itinerary-items/trips/:tripId/order
+itineraryItems.put("/trips/:tripId/order", async (c) => {
+  try {
+    const tripId = Number(c.req.param("tripId"));
+    const userId = Number(c.get("user").sub);
+
+    if (!Number.isInteger(tripId)) {
+      return c.json({ message: "不正な旅行IDです" }, 400);
+    }
+
+    const trip = await getOwnedTrip(tripId, userId);
+    if (!trip) {
+      return c.json({ message: "旅行が見つかりません" }, 404);
+    }
+
+    const body = (await c.req.json()) as ReorderBody;
+    const scheduledDate = typeof body.scheduled_date === "string" ? body.scheduled_date : "";
+    const itemIds = Array.isArray(body.item_ids) ? body.item_ids.map(Number) : [];
+
+    if (
+      !isValidDate(scheduledDate) ||
+      scheduledDate < trip.start_date ||
+      scheduledDate > trip.end_date
+    ) {
+      return c.json({ message: "旅行期間内の有効な日付を指定してください" }, 400);
+    }
+
+    if (
+      !Array.isArray(body.item_ids) ||
+      itemIds.some((id) => !Number.isInteger(id) || id <= 0) ||
+      new Set(itemIds).size !== itemIds.length
+    ) {
+      return c.json({ message: "並び替える旅程IDが不正です" }, 400);
+    }
+
+    const [existingRows] = await pool.query<mysql.RowDataPacket[]>(
+      "SELECT id FROM itinerary_items WHERE trip_id = ? AND scheduled_date = ? ORDER BY sort_order, id",
+      [tripId, scheduledDate]
+    );
+    const existingIds = existingRows.map((row) => Number(row.id));
+    const hasSameItems =
+      existingIds.length === itemIds.length && existingIds.every((id) => itemIds.includes(id));
+
+    if (!hasSameItems) {
+      return c.json({ message: "指定された日付の旅程をすべて指定してください" }, 400);
+    }
+
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      for (const [index, itemId] of itemIds.entries()) {
+        await connection.query(
+          "UPDATE itinerary_items SET sort_order = ? WHERE id = ? AND trip_id = ? AND scheduled_date = ?",
+          [index + 1, itemId, tripId, scheduledDate]
+        );
+      }
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+
+    return c.body(null, 204);
+  } catch (error) {
+    console.error(error);
+    return c.json({ message: "旅程の並び替えに失敗しました" }, 500);
   }
 });
 

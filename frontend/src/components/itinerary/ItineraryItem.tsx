@@ -14,6 +14,10 @@ type Props = {
   places: TripPlace[];
   onUpdate: (id: number, input: ItineraryItemInput) => Promise<boolean>;
   onDelete: (item: ItineraryItemType) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  isMoveUpDisabled: boolean;
+  isMoveDownDisabled: boolean;
 };
 
 export const ItineraryItem = ({
@@ -23,6 +27,10 @@ export const ItineraryItem = ({
   places,
   onUpdate,
   onDelete,
+  onMoveUp,
+  onMoveDown,
+  isMoveUpDisabled,
+  isMoveDownDisabled,
 }: Props) => {
   const [isEditing, setIsEditing] = useState(false);
   const time = item.start_time
@@ -54,7 +62,27 @@ export const ItineraryItem = ({
         <h4 className="mt-1 font-semibold text-gray-900">{item.place_name}</h4>
         {item.memo && <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">{item.memo}</p>}
       </div>
-      <div className="flex shrink-0 gap-2 text-sm">
+      <div className="flex shrink-0 items-center gap-2 text-sm">
+        <div className="flex flex-col">
+          <button
+            type="button"
+            onClick={onMoveUp}
+            disabled={isMoveUpDisabled}
+            aria-label={`${item.place_name}を上へ移動`}
+            className="text-gray-500 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            onClick={onMoveDown}
+            disabled={isMoveDownDisabled}
+            aria-label={`${item.place_name}を下へ移動`}
+            className="text-gray-500 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            ↓
+          </button>
+        </div>
         <button
           type="button"
           onClick={() => setIsEditing(true)}
