@@ -10,9 +10,10 @@ type Props = {
 };
 
 // 未ログインの場合はログイン・新規登録フォームを表示し、
-// ログイン済みの場合はヘッダー（ログアウトボタン付き）と children を表示する。
+// ログイン済みの場合は children を表示する。
+// アカウント操作は App の固定ヘッダーで提供する。
 const AuthGate = ({ children }: Props) => {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading } = useAuth();
   const [mode, setMode] = useState<"login" | "signup">("login");
 
   // ログアウトしたら次回は常にログインフォームから始める。
@@ -42,17 +43,7 @@ const AuthGate = ({ children }: Props) => {
     );
   }
 
-  return (
-    <div>
-      <header className="flex items-center justify-between max-w-xl mx-auto px-4 pt-6 text-sm text-gray-500">
-        <span>{user.email}</span>
-        <button onClick={() => void logout()} className="text-blue-500 hover:underline">
-          ログアウト
-        </button>
-      </header>
-      {children}
-    </div>
-  );
+  return <>{children}</>;
 };
 
 export default AuthGate;
