@@ -54,12 +54,12 @@ erDiagram
 
 ユーザー認証情報を保持するテーブル。
 
-| カラム名 | 型 | 制約 | 説明 |
-|---|---|---|---|
-| `id` | `INT` | `PRIMARY KEY`, `AUTO_INCREMENT` | ユーザー ID |
-| `email` | `VARCHAR(255)` | `NOT NULL`, `UNIQUE` | ログインに使うメールアドレス |
-| `password_hash` | `VARCHAR(255)` | `NOT NULL` | bcrypt でハッシュ化したパスワード（平文は保存しない） |
-| `created_at` | `DATETIME` | `NOT NULL`, `DEFAULT CURRENT_TIMESTAMP` | 登録日時 |
+| カラム名        | 型             | 制約                                    | 説明                                                  |
+| --------------- | -------------- | --------------------------------------- | ----------------------------------------------------- |
+| `id`            | `INT`          | `PRIMARY KEY`, `AUTO_INCREMENT`         | ユーザー ID                                           |
+| `email`         | `VARCHAR(255)` | `NOT NULL`, `UNIQUE`                    | ログインに使うメールアドレス                          |
+| `password_hash` | `VARCHAR(255)` | `NOT NULL`                              | bcrypt でハッシュ化したパスワード（平文は保存しない） |
+| `created_at`    | `DATETIME`     | `NOT NULL`, `DEFAULT CURRENT_TIMESTAMP` | 登録日時                                              |
 
 - 文字コードは `utf8mb4`（絵文字・多言語対応）。
 - `email` に `UNIQUE KEY uq_users_email` を付与し、重複登録を DB レベルでも防止している（API 側でも事前チェック済み: [backend/src/routes/auth.ts](../backend/src/routes/auth.ts)）。
@@ -68,19 +68,20 @@ erDiagram
 
 旅行ごとの日別旅程を保持します。
 
-| カラム名 | 型 | 制約 | 説明 |
-|---|---|---|---|
-| `id` | `INT` | PRIMARY KEY, AUTO_INCREMENT | 旅程ID |
-| `trip_id` | `INT` | NOT NULL, FK | 所属する旅行 |
-| `scheduled_date` | `DATE` | NOT NULL | 予定日 |
-| `start_time` / `end_time` | `TIME` | NULL | 開始・終了時刻（任意） |
-| `place_name` | `VARCHAR(100)` | NOT NULL | 場所名 |
-| `trip_place_id` | `INT` | NULL, FK | 行きたい場所との任意の紐付け |
-| `memo` | `TEXT` | NULL | メモ |
-| `sort_order` | `INT` | NOT NULL | 同じ日時内の並び順 |
+| カラム名                  | 型             | 制約                        | 説明                                                     |
+| ------------------------- | -------------- | --------------------------- | -------------------------------------------------------- |
+| `id`                      | `INT`          | PRIMARY KEY, AUTO_INCREMENT | 旅程ID                                                   |
+| `trip_id`                 | `INT`          | NOT NULL, FK                | 所属する旅行                                             |
+| `scheduled_date`          | `DATE`         | NOT NULL                    | 予定日                                                   |
+| `start_time` / `end_time` | `TIME`         | NULL                        | 開始・終了時刻（任意）                                   |
+| `place_name`              | `VARCHAR(100)` | NOT NULL                    | 場所名                                                   |
+| `trip_place_id`           | `INT`          | NULL, FK                    | 行きたい場所との任意の紐付け                             |
+| `memo`                    | `TEXT`         | NULL                        | メモ                                                     |
+| `sort_order`              | `INT`          | NOT NULL                    | 同じ日付内の手動の表示順。時刻の早さより優先して表示する |
 
 - 旅行削除時には、所属する旅程も削除されます。
 - 行きたい場所削除時には `trip_place_id` だけが `NULL` となり、旅程の場所名・メモは保持されます。
+- 同じ日付の旅程は `sort_order` 昇順で表示します。時刻の重複はAPIで検証しますが、時刻未定または終了時刻未設定の旅程は判定対象外です。
 
 ## 新しいテーブルを追加する手順
 

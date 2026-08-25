@@ -5,6 +5,7 @@ const itineraryApi = vi.hoisted(() => ({
   createItineraryItem: vi.fn(),
   deleteItineraryItem: vi.fn(),
   getItineraryItems: vi.fn(),
+  reorderItineraryItems: vi.fn(),
   updateItineraryItem: vi.fn(),
 }));
 
@@ -79,6 +80,43 @@ describe("ItineraryList", () => {
     fireEvent.click(screen.getByRole("button", { name: "変更を保存" }));
 
     await waitFor(() => expect(screen.getByText("八坂神社")).toBeInTheDocument());
+  });
+
+  it("予定を上下に移動して手動の表示順を保存できる", async () => {
+    const secondItem = { ...existingItem, id: 2, place_name: "八坂神社", sort_order: 2 };
+    itineraryApi.getItineraryItems.mockResolvedValue([existingItem, secondItem]);
+    itineraryApi.reorderItineraryItems.mockResolvedValue(undefined);
+    render(<ItineraryList tripId={10} tripStartDate="2026-08-20" tripEndDate="2026-08-21" />);
+
+    await waitFor(() => expect(screen.getByText("八坂神社")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "八坂神社を上へ移動" }));
+
+    await waitFor(() => {
+      expect(itineraryApi.reorderItineraryItems).toHaveBeenCalledWith(10, "2026-08-20", [2, 1]);
+    });
+    const places = screen
+      .getAllByRole("heading", { level: 4 })
+      .map((heading) => heading.textContent);
+    expect(places).toEqual(["八坂神社", "清水寺"]);
+    expect(screen.getByRole("button", { name: "八坂神社を上へ移動" })).toBeDisabled();
+  });
+
+  it("並び替えに失敗した場合は順序を変えずエラーを表示する", async () => {
+    const secondItem = { ...existingItem, id: 2, place_name: "八坂神社", sort_order: 2 };
+    itineraryApi.getItineraryItems.mockResolvedValue([existingItem, secondItem]);
+    itineraryApi.reorderItineraryItems.mockRejectedValue(new Error("並び替えに失敗しました"));
+    render(<ItineraryList tripId={10} tripStartDate="2026-08-20" tripEndDate="2026-08-21" />);
+
+    await waitFor(() => expect(screen.getByText("八坂神社")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "八坂神社を上へ移動" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent("並び替えに失敗しました")
+    );
+    const places = screen
+      .getAllByRole("heading", { level: 4 })
+      .map((heading) => heading.textContent);
+    expect(places).toEqual(["清水寺", "八坂神社"]);
   });
 
   it("予定を削除すると確認後に一覧から除外する", async () => {
