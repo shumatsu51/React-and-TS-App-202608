@@ -36,3 +36,17 @@ export const deleteTrip = async (id: number): Promise<void> => {
     throw new Error("旅行の削除に失敗しました");
   }
 };
+
+export const updateTripBudget = async (id: number, budgetAmount: number | null): Promise<void> => {
+  const response = await fetch(`${BASE_URL}/${id}/budget`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ budget_amount: budgetAmount }),
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? "予算の更新に失敗しました");
+  }
+};
