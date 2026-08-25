@@ -6,6 +6,25 @@ import { requireAuth, type AuthEnv } from "../middleware/auth.js";
 
 const trips = new Hono<AuthEnv>();
 
+const MAX_AMOUNT = 999_999_999;
+
+const parseOptionalAmount = (value: unknown): number | null | undefined => {
+  if (value === null || value === "") return null;
+
+  const normalizedValue = typeof value === "string" && /^\d+$/.test(value) ? Number(value) : value;
+
+  if (
+    typeof normalizedValue !== "number" ||
+    !Number.isSafeInteger(normalizedValue) ||
+    normalizedValue < 1 ||
+    normalizedValue > MAX_AMOUNT
+  ) {
+    return undefined;
+  }
+
+  return normalizedValue;
+};
+
 // ログイン必須
 trips.use("/*", requireAuth);
 
@@ -271,6 +290,39 @@ trips.put("/:id", async (c) => {
       },
       500
     );
+  }
+});
+
+// PUT /api/trips/:id/budget
+trips.put("/:id/budget", async (c) => {
+  try {
+    const userId = Number(c.get("user").sub);
+    const tripId = Number(c.req.param("id"));
+
+    if (!Number.isInteger(tripId)) {
+      return c.json({ message: "不正な旅行IDです" }, 400);
+    }
+
+    const body = (await c.req.json()) as { budget_amount?: unknown };
+    const budgetAmount = parseOptionalAmount(body.budget_amount);
+
+    if (budgetAmount === undefined) {
+      return c.json({ message: "予算は1円以上999,999,999円以下の整数で入力してください" }, 400);
+    }
+
+    const [result] = await pool.query<mysql.ResultSetHeader>(
+      "UPDATE trips SET budget_amount = ? WHERE id = ? AND user_id = ?",
+      [budgetAmount, tripId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return c.json({ message: "旅行が見つかりません" }, 404);
+    }
+
+    return c.json({ trip_id: tripId, budget_amount: budgetAmount });
+  } catch (error) {
+    console.error(error);
+    return c.json({ message: "予算の更新に失敗しました" }, 500);
   }
 });
 
