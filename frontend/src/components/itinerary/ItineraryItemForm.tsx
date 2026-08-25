@@ -60,6 +60,8 @@ export const ItineraryItemForm = ({
 
   const inputClassName =
     "mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-900";
+  const isPlaceNameError = error === "場所名を入力してください";
+  const isTimeError = error === "終了時刻は開始時刻以降に設定してください";
 
   return (
     <form onSubmit={handleSubmit} className="rounded-xl bg-gray-50 p-4">
@@ -102,6 +104,8 @@ export const ItineraryItemForm = ({
             type="time"
             value={startTime}
             onChange={(event) => setStartTime(event.target.value)}
+            aria-describedby={isTimeError ? "itinerary-form-error" : undefined}
+            aria-invalid={isTimeError}
             className={inputClassName}
           />
         </label>
@@ -111,6 +115,8 @@ export const ItineraryItemForm = ({
             type="time"
             value={endTime}
             onChange={(event) => setEndTime(event.target.value)}
+            aria-describedby={isTimeError ? "itinerary-form-error" : undefined}
+            aria-invalid={isTimeError}
             className={inputClassName}
           />
         </label>
@@ -123,6 +129,8 @@ export const ItineraryItemForm = ({
           value={placeName}
           onChange={(event) => setPlaceName(event.target.value)}
           maxLength={100}
+          aria-describedby={isPlaceNameError ? "itinerary-form-error" : undefined}
+          aria-invalid={isPlaceNameError}
           className={inputClassName}
           required
         />
@@ -139,7 +147,7 @@ export const ItineraryItemForm = ({
       </label>
 
       {error && (
-        <p role="alert" className="mt-3 text-sm text-red-600">
+        <p id="itinerary-form-error" role="alert" className="mt-3 text-sm text-red-600">
           {error}
         </p>
       )}
