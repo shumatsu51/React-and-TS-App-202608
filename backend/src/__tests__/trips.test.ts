@@ -46,3 +46,48 @@ describe("PUT /api/trips/:id", () => {
     expect(pool.query).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("PUT /api/trips/:id/budget", () => {
+  it("旅行の予算を設定できる", async () => {
+    vi.mocked(pool.query).mockResolvedValueOnce([{ affectedRows: 1 }, []] as unknown as [
+      mysql.ResultSetHeader,
+      mysql.FieldPacket[],
+    ]);
+
+    const response = await app.request("/api/trips/1/budget", {
+      method: "PUT",
+      headers: await createAuthHeader(),
+      body: JSON.stringify({ budget_amount: "100000" }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ trip_id: 1, budget_amount: 100000 });
+  });
+
+  it("予算を未設定に戻せる", async () => {
+    vi.mocked(pool.query).mockResolvedValueOnce([{ affectedRows: 1 }, []] as unknown as [
+      mysql.ResultSetHeader,
+      mysql.FieldPacket[],
+    ]);
+
+    const response = await app.request("/api/trips/1/budget", {
+      method: "PUT",
+      headers: await createAuthHeader(),
+      body: JSON.stringify({ budget_amount: null }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ trip_id: 1, budget_amount: null });
+  });
+
+  it("不正な予算は400を返す", async () => {
+    const response = await app.request("/api/trips/1/budget", {
+      method: "PUT",
+      headers: await createAuthHeader(),
+      body: JSON.stringify({ budget_amount: 100.5 }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(pool.query).not.toHaveBeenCalled();
+  });
+});
