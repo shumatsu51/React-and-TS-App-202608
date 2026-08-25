@@ -20,7 +20,7 @@ graph TD
 | `src/App.tsx` | ログイン後に表示されるメイン画面。ここから自分のアプリ機能を実装していく |
 | `src/main.tsx` | エントリーポイント。`AuthProvider` でアプリ全体をラップする |
 | `src/context/` | 認証状態の Context（`authContext.ts`）、Provider（`AuthProvider.tsx`）、フック（`useAuth.ts`）を分離して配置 |
-| `src/components/` | UI コンポーネント（`LoginForm.tsx` / `SignupForm.tsx` / `AuthGate.tsx`） |
+| `src/components/` | UI コンポーネント。`auth/`（認証）、`trip/`（旅行）、`expense/`（費用・予算）、`itinerary/`（旅程）、`trip-place/`（行きたい場所）、`common/`（複数機能で共有する UI）に分類して配置 |
 | `src/api/` | バックエンド API を呼び出すクライアント関数（`auth.ts`） |
 | `src/types/` | フロントエンドで使う型定義 |
 | `src/__tests__/` | Vitest によるコンポーネントテスト |

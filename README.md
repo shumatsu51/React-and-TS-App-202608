@@ -135,7 +135,7 @@ react-hono-app-template/
 ├── frontend/          # React + Vite + Tailwind CSS
 │   ├── src/
 │   │   ├── api/       # バックエンド API クライアント（auth）
-│   │   ├── components/# UI コンポーネント（ログイン・新規登録フォームなど）
+│   │   ├── components/ # UI コンポーネント（機能別・共通UI別に分類）
 │   │   ├── context/   # AuthContext（ログイン状態をアプリ全体で共有）
 │   │   ├── types/     # 型定義
 │   │   ├── App.tsx    # ログイン後のメイン画面（ここから機能を実装していく）
