@@ -8,6 +8,7 @@ import { deleteTrip, getTrip } from "../api/trips";
 import type { Trip } from "../types/trip";
 import { TripPlaceList } from "../components/trip-place/TripPlaceList";
 import { ItineraryList } from "../components/itinerary/ItineraryList";
+import { ExpenseList } from "../components/expense/ExpenseList";
 import { getTripStatus } from "../utils/tripStatus";
 import { getTripDuration } from "../utils/tripDuration";
 import { PageHeader } from "../components/PageHeader";
@@ -165,6 +166,7 @@ export default function TripDetailPage() {
             tripStartDate={trip.start_date}
             tripEndDate={trip.end_date}
           />
+          <ExpenseList tripId={trip.id} />
         </div>
       </div>
 

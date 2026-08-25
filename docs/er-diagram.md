@@ -4,7 +4,7 @@ DDL の実体は [db/init.sql](../db/init.sql) です。このドキュメント
 
 ## ER 図
 
-旅行に紐づく行きたい場所と日別旅程を保持します。
+旅行に紐づく行きたい場所、日別旅程、費用・予算を保持します。
 
 ```mermaid
 erDiagram
@@ -21,6 +21,7 @@ erDiagram
         varchar title
         date start_date
         date end_date
+        bigint budget_amount
     }
 
     trip_places {
@@ -42,9 +43,21 @@ erDiagram
         int sort_order
     }
 
+    trip_expenses {
+        int id PK
+        int trip_id FK
+        varchar description
+        varchar category
+        bigint amount
+        varchar payment_status
+        date paid_at
+        text memo
+    }
+
     users ||--o{ trips : "1人のユーザーは複数の旅行を持つ"
     trips ||--o{ trip_places : "旅行ごとの行きたい場所"
     trips ||--o{ itinerary_items : "旅行ごとの日別旅程"
+    trips ||--o{ trip_expenses : "旅行ごとの費用明細"
     trip_places o|--o{ itinerary_items : "任意で紐付く"
 ```
 
@@ -63,6 +76,37 @@ erDiagram
 
 - 文字コードは `utf8mb4`（絵文字・多言語対応）。
 - `email` に `UNIQUE KEY uq_users_email` を付与し、重複登録を DB レベルでも防止している（API 側でも事前チェック済み: [backend/src/routes/auth.ts](../backend/src/routes/auth.ts)）。
+
+### trips
+
+旅行の基本情報と任意の旅行予算を保持します。
+
+| カラム名 | 型 | 制約 | 説明 |
+| --- | --- | --- | --- |
+| `id` | `INT` | PRIMARY KEY, AUTO_INCREMENT | 旅行ID |
+| `user_id` | `INT` | NOT NULL, FK | 所有ユーザー |
+| `title` | `VARCHAR(100)` | NOT NULL | 旅行名 |
+| `start_date` / `end_date` | `DATE` | NOT NULL | 旅行期間 |
+| `description` | `TEXT` | NULL | 旅行の説明 |
+| `budget_amount` | `BIGINT UNSIGNED` | NULL | 旅行全体の予算。未設定を許可し、日本円の整数で保持 |
+
+### trip_expenses
+
+旅行ごとの費用明細を保持します。支払者は保存せず、旅行の所有ユーザー自身の支出として扱います。
+
+| カラム名 | 型 | 制約 | 説明 |
+| --- | --- | --- | --- |
+| `id` | `INT` | PRIMARY KEY, AUTO_INCREMENT | 費用ID |
+| `trip_id` | `INT` | NOT NULL, FK | 所属する旅行 |
+| `description` | `VARCHAR(100)` | NOT NULL | 費用内容 |
+| `category` | `VARCHAR(30)` | NOT NULL | `transport`、`accommodation`、`food`、`activity`、`shopping`、`other` のいずれか |
+| `amount` | `BIGINT UNSIGNED` | NOT NULL | 金額（日本円の整数） |
+| `payment_status` | `VARCHAR(20)` | NOT NULL | `unpaid`（未払い）または `paid`（支払済み） |
+| `paid_at` | `DATE` | NULL | 支払日（任意） |
+| `memo` | `TEXT` | NULL | メモ（任意） |
+
+- 旅行削除時には、費用明細も連動して削除されます。
+- カテゴリ別の集計で使用するため、`trip_id, category` の複合インデックスを設定しています。
 
 ### itinerary_items
 

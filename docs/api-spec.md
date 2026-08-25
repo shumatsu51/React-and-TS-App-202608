@@ -135,6 +135,107 @@ ALB のヘルスチェック・死活監視用。DB には依存しない（サ�
 
 ---
 
+## PUT /api/trips/:id/budget
+
+旅行全体の予算を設定または解除する。**認証必須**。予算は日本円の整数で、`null` を指定すると未設定に戻せる。
+
+**リクエストボディ**
+
+```json
+{ "budget_amount": 100000 }
+```
+
+| ステータス | ボディ | 条件 |
+| --- | --- | --- |
+| `200 OK` | `{ trip_id, budget_amount }` | 更新成功 |
+| `400 Bad Request` | `{ message }` | 予算が1〜999,999,999円の整数ではない |
+| `404 Not Found` | `{ message }` | 旅行が見つからない、または権限がない |
+
+---
+
+## GET /api/trip-expenses/trips/:tripId
+
+旅行の予算、全体・カテゴリ別集計、費用明細をまとめて取得する。**認証必須**。
+
+**レスポンス例**
+
+```json
+{
+  "budget_amount": 100000,
+  "total_amount": 82000,
+  "paid_amount": 50000,
+  "remaining_budget": 18000,
+  "category_summaries": [
+    { "category": "transport", "total_amount": 30000, "paid_amount": 30000 }
+  ],
+  "expenses": [
+    {
+      "id": 1,
+      "trip_id": 10,
+      "description": "新幹線往復",
+      "category": "transport",
+      "amount": 30000,
+      "payment_status": "paid",
+      "paid_at": "2026-08-01",
+      "memo": "指定席"
+    }
+  ]
+}
+```
+
+- `total_amount` は未払い・支払済みを含む予定総額。
+- `paid_amount` は支払済み明細だけの合計。
+- `remaining_budget` は `budget_amount - total_amount`。予算未設定時は `null`。
+- `category_summaries` は費用がないカテゴリも0円で返す。
+
+## POST /api/trip-expenses/trips/:tripId
+
+費用明細を追加する。**認証必須**。
+
+## PUT /api/trip-expenses/:id
+
+費用明細を更新する。**認証必須**。
+
+作成・更新のリクエストボディは共通。
+
+```json
+{
+  "description": "新幹線往復",
+  "category": "transport",
+  "amount": 30000,
+  "payment_status": "paid",
+  "paid_at": "2026-08-01",
+  "memo": "指定席"
+}
+```
+
+| フィールド | 型 | 制約 |
+| --- | --- | --- |
+| `description` | string | 必須、1〜100文字 |
+| `category` | string | 必須。`transport`、`accommodation`、`food`、`activity`、`shopping`、`other` のいずれか |
+| `amount` | number | 必須。1〜999,999,999の整数 |
+| `payment_status` | string | 必須。`unpaid` または `paid` |
+| `paid_at` | string / null | 任意。有効な `YYYY-MM-DD` 形式 |
+| `memo` | string / null | 任意、500文字以内 |
+
+| ステータス | ボディ | 条件 |
+| --- | --- | --- |
+| `201 Created` | 費用明細 | 追加成功（POSTのみ） |
+| `200 OK` | 費用明細 | 更新成功（PUTのみ） |
+| `400 Bad Request` | `{ message }` | 入力値が不正 |
+| `404 Not Found` | `{ message }` | 旅行・費用が見つからない、または権限がない |
+
+## DELETE /api/trip-expenses/:id
+
+費用明細を削除する。**認証必須**。
+
+| ステータス | ボディ | 条件 |
+| --- | --- | --- |
+| `204 No Content` | なし | 削除成功 |
+| `404 Not Found` | `{ message }` | 費用が見つからない、または権限がない |
+
+---
+
 ## 共通レスポンス型
 
 ```ts

@@ -23,6 +23,9 @@ vi.mock("../components/itinerary/ItineraryList", () => ({
     </p>
   ),
 }));
+vi.mock("../components/expense/ExpenseList", () => ({
+  ExpenseList: ({ tripId }: { tripId: number }) => <p>費用・予算: {tripId}</p>,
+}));
 
 import TripDetailPage from "../pages/TripDetailPage";
 
@@ -58,12 +61,11 @@ describe("TripDetailPage", () => {
     await waitFor(() => expect(screen.getByText("京都旅行")).toBeInTheDocument());
     expect(screen.getByRole("heading", { level: 1, name: "旅行の詳細" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "← 旅行一覧" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1 }).closest("div.sticky")).toHaveClass(
-      "top-24"
-    );
+    expect(screen.getByRole("heading", { level: 1 }).closest("div.sticky")).toHaveClass("top-24");
     expect(screen.getByText("夏休みの旅行")).toBeInTheDocument();
     expect(screen.getByText("行きたい場所: 1")).toBeInTheDocument();
     expect(screen.getByText("旅程: 1 / 2026-08-20 - 2026-08-22")).toBeInTheDocument();
+    expect(screen.getByText("費用・予算: 1")).toBeInTheDocument();
   });
 
   it("取得失敗後に再試行できる", async () => {
