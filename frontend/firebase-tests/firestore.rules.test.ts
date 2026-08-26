@@ -11,7 +11,10 @@ import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from "firebase/firest
 const projectId = "demo-trip-app";
 const ownerId = "owner";
 const otherUserId = "other-user";
-const rules = readFileSync(fileURLToPath(new URL("../../firestore.rules", import.meta.url)), "utf8");
+const rules = readFileSync(
+  fileURLToPath(new URL("../../firestore.rules", import.meta.url)),
+  "utf8"
+);
 
 let testEnvironment: RulesTestEnvironment;
 
@@ -26,7 +29,9 @@ const tripData = () => ({
 });
 
 const createTripAsOwner = async (tripId = "kyoto") => {
-  const firestore = testEnvironment.authenticatedContext(ownerId, { email: "owner@example.com" }).firestore();
+  const firestore = testEnvironment
+    .authenticatedContext(ownerId, { email: "owner@example.com" })
+    .firestore();
   await assertSucceeds(setDoc(doc(firestore, "users", ownerId, "trips", tripId), tripData()));
 };
 
@@ -55,7 +60,17 @@ describe("Cloud Firestore Security Rules", () => {
       });
     });
 
-    await assertFails(getDoc(doc(testEnvironment.unauthenticatedContext().firestore(), "users", ownerId, "trips", "kyoto")));
+    await assertFails(
+      getDoc(
+        doc(
+          testEnvironment.unauthenticatedContext().firestore(),
+          "users",
+          ownerId,
+          "trips",
+          "kyoto"
+        )
+      )
+    );
   });
 
   it("所有者は有効な旅行を作成できる", async () => {
@@ -63,13 +78,19 @@ describe("Cloud Firestore Security Rules", () => {
   });
 
   it("別ユーザーのパスに旅行を作成できない", async () => {
-    const firestore = testEnvironment.authenticatedContext(ownerId, { email: "owner@example.com" }).firestore();
+    const firestore = testEnvironment
+      .authenticatedContext(ownerId, { email: "owner@example.com" })
+      .firestore();
 
-    await assertFails(setDoc(doc(firestore, "users", otherUserId, "trips", "forbidden"), tripData()));
+    await assertFails(
+      setDoc(doc(firestore, "users", otherUserId, "trips", "forbidden"), tripData())
+    );
   });
 
   it("許可されていないフィールドを持つ旅行を拒否する", async () => {
-    const firestore = testEnvironment.authenticatedContext(ownerId, { email: "owner@example.com" }).firestore();
+    const firestore = testEnvironment
+      .authenticatedContext(ownerId, { email: "owner@example.com" })
+      .firestore();
 
     await assertFails(
       setDoc(doc(firestore, "users", ownerId, "trips", "invalid"), {
@@ -81,7 +102,9 @@ describe("Cloud Firestore Security Rules", () => {
 
   it("旅行期間外の旅程を拒否する", async () => {
     await createTripAsOwner();
-    const firestore = testEnvironment.authenticatedContext(ownerId, { email: "owner@example.com" }).firestore();
+    const firestore = testEnvironment
+      .authenticatedContext(ownerId, { email: "owner@example.com" })
+      .firestore();
 
     await assertFails(
       setDoc(doc(firestore, "users", ownerId, "trips", "kyoto", "itineraryItems", "outside"), {
@@ -99,7 +122,9 @@ describe("Cloud Firestore Security Rules", () => {
   });
 
   it("親の旅行がない行きたい場所を拒否する", async () => {
-    const firestore = testEnvironment.authenticatedContext(ownerId, { email: "owner@example.com" }).firestore();
+    const firestore = testEnvironment
+      .authenticatedContext(ownerId, { email: "owner@example.com" })
+      .firestore();
 
     await assertFails(
       setDoc(doc(firestore, "users", ownerId, "trips", "missing", "places", "station"), {
@@ -113,7 +138,9 @@ describe("Cloud Firestore Security Rules", () => {
 
   it("同じ旅行の行きたい場所を参照する旅程を作成できる", async () => {
     await createTripAsOwner();
-    const firestore = testEnvironment.authenticatedContext(ownerId, { email: "owner@example.com" }).firestore();
+    const firestore = testEnvironment
+      .authenticatedContext(ownerId, { email: "owner@example.com" })
+      .firestore();
 
     await assertSucceeds(
       setDoc(doc(firestore, "users", ownerId, "trips", "kyoto", "places", "station"), {
@@ -125,23 +152,28 @@ describe("Cloud Firestore Security Rules", () => {
     );
 
     await assertSucceeds(
-      setDoc(doc(firestore, "users", ownerId, "trips", "kyoto", "itineraryItems", "station-visit"), {
-        scheduledDate: "2026-08-20",
-        startTime: "10:00",
-        endTime: "11:00",
-        placeName: "京都駅",
-        tripPlaceId: "station",
-        memo: null,
-        sortOrder: 1,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      })
+      setDoc(
+        doc(firestore, "users", ownerId, "trips", "kyoto", "itineraryItems", "station-visit"),
+        {
+          scheduledDate: "2026-08-20",
+          startTime: "10:00",
+          endTime: "11:00",
+          placeName: "京都駅",
+          tripPlaceId: "station",
+          memo: null,
+          sortOrder: 1,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }
+      )
     );
   });
 
   it("無効な費用カテゴリを拒否する", async () => {
     await createTripAsOwner();
-    const firestore = testEnvironment.authenticatedContext(ownerId, { email: "owner@example.com" }).firestore();
+    const firestore = testEnvironment
+      .authenticatedContext(ownerId, { email: "owner@example.com" })
+      .firestore();
 
     await assertFails(
       setDoc(doc(firestore, "users", ownerId, "trips", "kyoto", "expenses", "invalid-category"), {
@@ -159,7 +191,9 @@ describe("Cloud Firestore Security Rules", () => {
 
   it("所有者は自分の旅行を削除できる", async () => {
     await createTripAsOwner();
-    const firestore = testEnvironment.authenticatedContext(ownerId, { email: "owner@example.com" }).firestore();
+    const firestore = testEnvironment
+      .authenticatedContext(ownerId, { email: "owner@example.com" })
+      .firestore();
 
     await assertSucceeds(deleteDoc(doc(firestore, "users", ownerId, "trips", "kyoto")));
   });
