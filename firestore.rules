@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Security Rules は段階 2 で実装する。移行途中に本番データを公開しないため、
+    // それまではすべての読み書きを拒否する。
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
