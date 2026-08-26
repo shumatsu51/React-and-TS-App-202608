@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import type { User } from "../types/user";
-import { useAuth } from "../context/useAuth";
+import type { User } from "../../types/user";
+import { useAuth } from "../../context/useAuth";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 

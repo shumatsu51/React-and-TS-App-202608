@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import type { Trip } from "../types/trip";
-import { getTripStatus } from "../utils/tripStatus";
-import { getTripDuration } from "../utils/tripDuration";
+import type { Trip } from "../../types/trip";
+import { getTripStatus } from "../../utils/tripStatus";
+import { getTripDuration } from "../../utils/tripDuration";
 
 type Props = {
   trip: Trip;

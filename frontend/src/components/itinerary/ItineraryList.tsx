@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { ConfirmModal } from "../ConfirmModal";
-import { ErrorState } from "../ErrorState";
+import { ConfirmModal } from "../common/ConfirmModal";
+import { ErrorState } from "../common/ErrorState";
 import {
   createItineraryItem,
   deleteItineraryItem,

@@ -1,10 +1,10 @@
 import { useBlocker, useNavigate } from "react-router-dom";
-import { TripForm } from "../components/TripForm";
+import { TripForm } from "../components/trip/TripForm";
 import { useState } from "react";
-import { SuccessModal } from "../components/SuccessModal";
-import { UnsavedChangesModal } from "../components/UnsavedChangesModal";
+import { SuccessModal } from "../components/common/SuccessModal";
+import { UnsavedChangesModal } from "../components/common/UnsavedChangesModal";
 import { useBeforeUnloadWarning } from "../hooks/useBeforeUnloadWarning";
-import { PageHeader } from "../components/PageHeader";
+import { PageHeader } from "../components/common/PageHeader";
 
 export default function AddNewTripPage() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);

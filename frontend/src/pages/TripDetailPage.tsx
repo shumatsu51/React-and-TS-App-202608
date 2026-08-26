@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { ConfirmModal } from "../components/ConfirmModal";
-import { ErrorState } from "../components/ErrorState";
-import { SuccessModal } from "../components/SuccessModal";
+import { ConfirmModal } from "../components/common/ConfirmModal";
+import { ErrorState } from "../components/common/ErrorState";
+import { SuccessModal } from "../components/common/SuccessModal";
 import { deleteTrip, getTrip } from "../api/trips";
 import type { Trip } from "../types/trip";
 import { TripPlaceList } from "../components/trip-place/TripPlaceList";
@@ -11,7 +11,7 @@ import { ItineraryList } from "../components/itinerary/ItineraryList";
 import { ExpenseList } from "../components/expense/ExpenseList";
 import { getTripStatus } from "../utils/tripStatus";
 import { getTripDuration } from "../utils/tripDuration";
-import { PageHeader } from "../components/PageHeader";
+import { PageHeader } from "../components/common/PageHeader";
 
 export default function TripDetailPage() {
   const { id } = useParams();

@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { useBlocker, useNavigate, useParams } from "react-router-dom";
 
-import { TripForm } from "../components/TripForm";
-import { SuccessModal } from "../components/SuccessModal";
-import { ErrorState } from "../components/ErrorState";
-import { UnsavedChangesModal } from "../components/UnsavedChangesModal";
+import { TripForm } from "../components/trip/TripForm";
+import { SuccessModal } from "../components/common/SuccessModal";
+import { ErrorState } from "../components/common/ErrorState";
+import { UnsavedChangesModal } from "../components/common/UnsavedChangesModal";
 import { getTrip } from "../api/trips";
 import { useBeforeUnloadWarning } from "../hooks/useBeforeUnloadWarning";
 import type { Trip } from "../types/trip";
-import { PageHeader } from "../components/PageHeader";
+import { PageHeader } from "../components/common/PageHeader";
 
 export default function EditTripPage() {
   const { id } = useParams();
