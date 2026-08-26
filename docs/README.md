@@ -6,6 +6,7 @@
 | ドキュメント | 内容 |
 |---|---|
 | [deploy-to-aws.md](./deploy-to-aws.md) | AWS CDK を使った ECS Fargate + RDS へのデプロイ手順 |
+| [firebase-migration.md](./firebase-migration.md) | Firebase Authentication + Cloud Firestore + Hosting への段階的な移行計画と作業記録 |
 | [coding-guidelines.md](./coding-guidelines.md) | 命名規則・ファイル構成・エラーハンドリングなどのコーディング規約 |
 | [directory-structure.md](./directory-structure.md) | リポジトリ全体のディレクトリ構成と各ディレクトリの役割 |
 | [er-diagram.md](./er-diagram.md) | DB のテーブル設計・ER 図 |
