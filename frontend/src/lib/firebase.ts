@@ -1,6 +1,6 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { connectAuthEmulator, getAuth } from "firebase/auth";
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -32,7 +32,23 @@ const getFirebaseApp = (): FirebaseApp => {
   return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 };
 
-// Firebase Authentication / Firestore への移行時に利用する遅延初期化関数。
-// 現時点では既存の JWT + MySQL ローカル環境を維持するため、まだ画面からは呼び出さない。
-export const getFirebaseAuth = () => getAuth(getFirebaseApp());
-export const getFirebaseFirestore = () => getFirestore(getFirebaseApp());
+let emulatorsConnected = false;
+
+const connectEmulatorsIfEnabled = () => {
+  if (emulatorsConnected || import.meta.env.VITE_USE_FIREBASE_EMULATORS !== "true") return;
+
+  const app = getFirebaseApp();
+  connectAuthEmulator(getAuth(app), "http://127.0.0.1:9099");
+  connectFirestoreEmulator(getFirestore(app), "127.0.0.1", 8080);
+  emulatorsConnected = true;
+};
+
+export const getFirebaseAuth = () => {
+  connectEmulatorsIfEnabled();
+  return getAuth(getFirebaseApp());
+};
+
+export const getFirebaseFirestore = () => {
+  connectEmulatorsIfEnabled();
+  return getFirestore(getFirebaseApp());
+};
