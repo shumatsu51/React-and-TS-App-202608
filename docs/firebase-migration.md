@@ -25,7 +25,7 @@ graph LR
 | --- | --- | --- |
 | 0 | 移行準備：現行動作の基準確認、対象資産とデータ方針の確定 | 完了 |
 | 1 | Firebase プロジェクト、Auth、Firestore、Hosting、Emulator の土台を追加 | 進行中 |
-| 2 | Firestore データモデル、Security Rules、Rules テストを追加 | 未着手 |
+| 2 | Firestore データモデル、Security Rules、Rules テストを追加 | 完了 |
 | 3 | JWT Cookie 認証を Firebase Authentication に移行 | 未着手 |
 | 4 | 旅行 CRUD を Firestore SDK に移行 | 未着手 |
 | 5 | 場所・旅程・支出・予算を Firestore SDK に移行 | 未着手 |
@@ -79,7 +79,7 @@ users/{uid}
 
 - ローカル MySQL の既存ユーザー・旅行データは移行しない。Firebase では新しいアカウントとデータを作成する。
 - Firebase プロジェクトは開発・本番兼用の 1 プロジェクトで運用する。
-- 本番の Firebase プロジェクト ID は、Firebase Console でプロジェクトを作成した後に `.firebaserc` と `frontend/.env` へ設定する。
+- Firebase プロジェクト ID は `triply-73809`。`.firebaserc` とローカル専用の `frontend/.env` に設定する。
 
 ## 移行時の品質基準
 
@@ -121,4 +121,18 @@ Firebase Console で実プロジェクトを作成した後、次の情報が必
 3. Authentication のメール/パスワードプロバイダを有効化したこと
 4. Cloud Firestore Standard edition を作成したこと
 
-これらを受け取ったら、`.firebaserc` とローカル専用の `frontend/.env` を設定して実プロジェクトへ接続する。Security Rules が未実装の間は Firestore を本番アプリから利用しない。
+`.firebaserc` とローカル専用の `frontend/.env` に設定済み。Security Rules が未実装の間は Firestore を本番アプリから利用しない。
+
+## 段階 2：データ設計と Security Rules
+
+- [firestore-data-model.md](./firestore-data-model.md) に Firestore のパス構造、フィールド、整合性の責務分担を定義した。
+- [firestore.rules](../firestore.rules) で、認証済み所有者だけが自身のユーザー配下を操作できる Rules と入力制約を実装した。
+- Rules 専用の Emulator テストを `frontend/firebase-tests/` に追加した。通常の `frontend` テストとは分離しており、既存のローカル開発手順には影響しない。
+
+```bash
+npm run test:firestore-rules
+```
+
+このコマンドは `demo-trip-app` を用いて Firestore Emulator を起動し、実 Firebase プロジェクトには接続しない。所有権、未認証アクセス、想定外フィールド、旅行期間外の旅程、親旅行のないサブコレクション、費用カテゴリを確認する。
+
+Security Rules を実 Firebase プロジェクトへ反映するのは、認証画面を Firebase Authentication に移行する段階で行う。それまでは現行アプリが Firestore を利用しないため、実プロジェクトへのデプロイは不要である。
