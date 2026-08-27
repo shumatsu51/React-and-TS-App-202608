@@ -28,8 +28,8 @@ graph LR
 | 2 | Firestore データモデル、Security Rules、Rules テストを追加 | 完了 |
 | 3 | JWT Cookie 認証を Firebase Authentication に移行 | 完了 |
 | 4 | 旅行 CRUD を Firestore SDK に移行 | 完了 |
-| 5 | 場所・旅程・支出・予算を Firestore SDK に移行 | 進行中 |
-| 6 | Hosting 公開、スマートフォン検証、不要資産の整理、ドキュメント更新 | 未着手 |
+| 5 | 場所・旅程・支出・予算を Firestore SDK に移行 | 進行中（実プロジェクトの最終確認待ち） |
+| 6 | Hosting 公開、スマートフォン検証、不要資産の整理、ドキュメント更新 | 進行中 |
 
 ## 段階 0：移行準備
 
@@ -176,7 +176,7 @@ Vite をホスト側で直接起動してローカル API を使う場合、`/ap
 - `frontend/src/api/trips.ts` を認証プロバイダに応じて切り替える API 層に変更した。`local` モードは既存の Hono API を呼び、`firebase` モードは `users/{uid}/trips/{tripId}` を直接操作する。
 - 一覧は `startDate` 昇順で取得する。旅行の作成時には Rules が必須とする `budgetAmount: null`、`createdAt`、`updatedAt` を含める。更新時は `updatedAt` を Firestore のサーバー時刻で更新する。
 - Firestore の自動生成 ID に対応するため、旅行 ID は文字列・数値のどちらも受け入れる型にした。ローカルモードの数値 ID は従来どおり動作する。
-- Firebase モードの旅行詳細では、段階 5 で移行する行きたい場所・旅程・費用を呼び出さない。旅行基本情報の CRUD だけを先に実用可能にする。（段階 5 で解除）
+- 段階 4 では Firebase モードで行きたい場所・旅程・費用を呼び出さず、旅行基本情報の CRUD だけを先に移行した。段階 5 でこの制限は解除済みである。
 
 ### 実プロジェクトでの確認項目
 
@@ -205,3 +205,53 @@ Vite をホスト側で直接起動してローカル API を使う場合、`/ap
 3. 旅程の追加、編集、削除、同じ日内での上下移動ができる。
 4. 予算の設定・解除、費用の追加・編集・削除、カテゴリ別集計ができる。
 5. 旅行を削除後、Firestore Console で当該旅行配下の `places`、`itineraryItems`、`expenses` が残っていないことを確認する。
+
+## 段階 6：Hosting 公開・検証・文書整理
+
+### Firebase Hosting への公開
+
+Firebase モードの設定値を含む `frontend/.env` を用意した状態で、リポジトリのルートから次を実行する。
+
+```bash
+# 初回のみ（または認証が切れた場合）
+npm run firebase -- login
+
+# Firestore の Rules / Indexes と Hosting をまとめて公開する
+npm run firebase -- deploy --only firestore,hosting
+```
+
+Hosting だけを再公開する場合は、次のコマンドを使う。`firebase.json` の `predeploy` により、公開前に `frontend` の本番ビルドが必ず実行される。
+
+```bash
+npm run firebase -- deploy --only hosting
+```
+
+公開後の URL は CLI の `Hosting URL` に表示される。Firebase Hosting は SPA fallback を設定済みのため、旅行詳細などの画面を直接開いても `index.html` が返される。
+
+2026-08-27 に初回公開を完了した。公開 URL は <https://triply-73809.web.app> である。
+
+### 公開前後の確認
+
+```bash
+# フロントエンドの単体・コンポーネントテスト
+cd frontend && npm test
+
+# Firestore Security Rules の Emulator テスト（リポジトリのルートで実行）
+cd .. && npm run test:firestore-rules
+
+# 型検査、プロダクションビルド、静的解析
+cd frontend && npm run build && npm run lint
+```
+
+公開後は PC ブラウザで、Firebase Authentication の新規登録・ログイン・ログアウト、旅行／場所／旅程／費用／予算の CRUD、ログインしていない状態での画面遷移、旅行詳細 URL の直接表示を確認する。
+
+### スマートフォン実機確認（保留）
+
+スマートフォンを利用できる環境になったら、Hosting URL を HTTPS で開き、次を確認する。
+
+1. 新規登録、ログイン、ログアウトができる。
+2. 旅行・場所・旅程・費用・予算を作成、更新、削除できる。
+3. 画面幅が狭い状態でもフォーム、一覧、エラーメッセージが操作・閲覧できる。
+4. 直接 URL を開いた場合と、再読み込みした場合に旅行詳細画面が表示される。
+
+この確認が終わるまで、Docker Compose と AWS 関連資産は削除しない。
