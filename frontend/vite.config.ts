@@ -29,6 +29,11 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       environment: "jsdom",
+      // 既存テストは Hono + JWT Cookie のローカル動作を検証する。
+      // 開発用 .env を Firebase モードにしていてもテスト対象を変えない。
+      env: {
+        VITE_AUTH_PROVIDER: "local",
+      },
       setupFiles: ["./src/__tests__/setup.ts"],
       exclude: [...configDefaults.exclude, "firebase-tests/**"],
     },

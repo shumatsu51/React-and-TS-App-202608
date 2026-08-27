@@ -3,20 +3,21 @@ import { Link, Outlet } from "react-router-dom";
 
 import { useAuth } from "./context/useAuth";
 
-type HealthResponse = {
-  backend: string;
-  database: string;
-};
+const usesFirebaseAuth = import.meta.env.VITE_AUTH_PROVIDER === "firebase";
 
 export default function App() {
   const { user, logout } = useAuth();
 
-  const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [isBackendReady, setIsBackendReady] = useState(usesFirebaseAuth);
   const [error, setError] = useState<string | null>(null);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (usesFirebaseAuth) {
+      return;
+    }
+
     const fetchHealth = async () => {
       try {
         const response = await fetch("/api/health");
@@ -25,8 +26,7 @@ export default function App() {
           throw new Error("API request failed");
         }
 
-        const data: HealthResponse = await response.json();
-        setHealth(data);
+        setIsBackendReady(true);
       } catch (error) {
         console.error(error);
         setError("接続に失敗しました");
@@ -60,7 +60,7 @@ export default function App() {
     );
   }
 
-  if (!health) {
+  if (!isBackendReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-sm font-medium text-gray-500">読み込み中...</div>
