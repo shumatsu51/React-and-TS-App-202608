@@ -9,6 +9,7 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { getFirebaseAuth, getFirebaseFirestore } from "../lib/firebase";
 import type { Trip, TripId, TripInput } from "../types/trip";
@@ -49,6 +50,20 @@ const firebaseTripData = (input: TripInput) => ({
   endDate: input.endDate,
   description: input.description.trim() || null,
 });
+
+const deleteSubcollection = async (
+  tripReference: ReturnType<typeof doc>,
+  collectionName: "places" | "itineraryItems" | "expenses"
+) => {
+  const snapshot = await getDocs(collection(tripReference, collectionName));
+  const documents = snapshot.docs;
+
+  for (let index = 0; index < documents.length; index += 500) {
+    const batch = writeBatch(getFirebaseFirestore());
+    documents.slice(index, index + 500).forEach((document) => batch.delete(document.ref));
+    await batch.commit();
+  }
+};
 
 const getResponseError = async (response: Response, fallback: string) => {
   const body = (await response.json().catch(() => null)) as { message?: string } | null;
@@ -112,7 +127,19 @@ export const createTrip = async (input: TripInput): Promise<Trip> => {
 export const updateTrip = async (id: TripId, input: TripInput): Promise<void> => {
   if (usesFirebaseTrips) {
     const userId = getFirebaseUserId();
-    await updateDoc(doc(getTripsCollection(userId), String(id)), {
+    const tripReference = doc(getTripsCollection(userId), String(id));
+    const itinerarySnapshot = await getDocs(collection(tripReference, "itineraryItems"));
+    const hasOutOfPeriodItem = itinerarySnapshot.docs.some((item) => {
+      const scheduledDate = (item.data() as { scheduledDate?: unknown }).scheduledDate;
+      return (
+        typeof scheduledDate === "string" &&
+        (scheduledDate < input.startDate || scheduledDate > input.endDate)
+      );
+    });
+    if (hasOutOfPeriodItem) {
+      throw new Error("旅行期間外になる旅程があります。先に旅程の日付を変更または削除してください");
+    }
+    await updateDoc(tripReference, {
       ...firebaseTripData(input),
       updatedAt: serverTimestamp(),
     });
@@ -137,7 +164,13 @@ export const updateTrip = async (id: TripId, input: TripInput): Promise<void> =>
 export const deleteTrip = async (id: TripId): Promise<void> => {
   if (usesFirebaseTrips) {
     const userId = getFirebaseUserId();
-    await deleteDoc(doc(getTripsCollection(userId), String(id)));
+    const tripReference = doc(getTripsCollection(userId), String(id));
+    await Promise.all([
+      deleteSubcollection(tripReference, "places"),
+      deleteSubcollection(tripReference, "itineraryItems"),
+      deleteSubcollection(tripReference, "expenses"),
+    ]);
+    await deleteDoc(tripReference);
     return;
   }
 
