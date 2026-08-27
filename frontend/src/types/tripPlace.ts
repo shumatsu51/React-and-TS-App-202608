@@ -1,6 +1,8 @@
+import type { TripId } from "./trip";
+
 export type TripPlace = {
-  id: number;
-  trip_id: number;
+  id: TripId;
+  trip_id: TripId;
   name: string;
   is_visited: boolean;
 };

@@ -1,11 +1,13 @@
+import type { TripId } from "./trip";
+
 export type ItineraryItem = {
-  id: number;
-  trip_id: number;
+  id: TripId;
+  trip_id: TripId;
   scheduled_date: string;
   start_time: string | null;
   end_time: string | null;
   place_name: string;
-  trip_place_id: number | null;
+  trip_place_id: TripId | null;
   memo: string | null;
   sort_order: number;
 };
@@ -15,6 +17,6 @@ export type ItineraryItemInput = {
   start_time: string | null;
   end_time: string | null;
   place_name: string;
-  trip_place_id: number | null;
+  trip_place_id: TripId | null;
   memo: string | null;
 };

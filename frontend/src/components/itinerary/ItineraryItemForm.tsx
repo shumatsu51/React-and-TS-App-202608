@@ -52,7 +52,7 @@ export const ItineraryItemForm = ({
       start_time: startTime || null,
       end_time: endTime || null,
       place_name: placeName.trim(),
-      trip_place_id: tripPlaceId ? Number(tripPlaceId) : null,
+      trip_place_id: tripPlaceId || null,
       memo: memo.trim() || null,
     });
     setIsSubmitting(false);
@@ -85,7 +85,7 @@ export const ItineraryItemForm = ({
             onChange={(event) => {
               const nextId = event.target.value;
               setTripPlaceId(nextId);
-              const place = places.find((item) => item.id === Number(nextId));
+              const place = places.find((item) => String(item.id) === nextId);
               if (place) setPlaceName(place.name);
             }}
             className={inputClassName}

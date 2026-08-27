@@ -1,9 +1,10 @@
 import { TripPlace } from "../../types/tripPlace";
+import type { TripId } from "../../types/trip";
 
 type Props = {
   place: TripPlace;
-  onToggle: (id: number, isVisited: boolean) => void;
-  onDelete: (id: number) => void;
+  onToggle: (id: TripId, isVisited: boolean) => void;
+  onDelete: (id: TripId) => void;
 };
 
 export const TripPlaceItem = ({ place, onToggle, onDelete }: Props) => {
