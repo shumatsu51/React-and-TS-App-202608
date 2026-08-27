@@ -46,3 +46,11 @@ coverage/
 
 # Test
 .vitest/
+
+# Firebase
+.firebase/
+.firebase-cli-config/
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+firebase-emulator-data/

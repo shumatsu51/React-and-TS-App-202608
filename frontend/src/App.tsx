@@ -74,7 +74,7 @@ export default function App() {
         <div className="mx-auto flex h-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/trips" className="group cursor-pointer">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 transition-colors group-hover:text-blue-600">
-              My trip, Your trip
+              Triply
             </h1>
 
             <p className="mt-1 text-sm text-gray-500 transition-colors group-hover:text-gray-700">
@@ -99,7 +99,11 @@ export default function App() {
                 onClick={() => setIsAccountMenuOpen((isOpen) => !isOpen)}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current stroke-2">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5 fill-none stroke-current stroke-2"
+                >
                   <circle cx="12" cy="8" r="3.25" />
                   <path d="M5.5 20c.6-3.2 3.2-5 6.5-5s5.9 1.8 6.5 5" />
                 </svg>

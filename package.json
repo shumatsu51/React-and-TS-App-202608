@@ -5,10 +5,16 @@
     "lint": "npm run lint --prefix backend && npm run lint --prefix frontend",
     "lint:fix": "npm run lint:fix --prefix backend && npm run lint:fix --prefix frontend",
     "format": "npm run format --prefix backend && npm run format --prefix frontend",
-    "format:check": "npm run format:check --prefix backend && npm run format:check --prefix frontend"
+    "format:check": "npm run format:check --prefix backend && npm run format:check --prefix frontend",
+    "firebase": "firebase",
+    "firebase:emulators": "firebase emulators:start",
+    "firebase:deploy": "firebase deploy",
+    "test:firestore-rules": "firebase emulators:exec --only firestore --project demo-trip-app \"npm run test:firestore-rules --prefix frontend\""
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",
-    "@types/jest": "^30.0.0"
+    "@types/jest": "^30.0.0",
+    "@types/node": "^26.3.0",
+    "firebase-tools": "^15.28.1"
   }
 }
