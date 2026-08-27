@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   query: vi.fn(),
   serverTimestamp: vi.fn(),
   updateDoc: vi.fn(),
+  writeBatch: vi.fn(),
   getFirebaseAuth: vi.fn(),
   getFirebaseFirestore: vi.fn(),
 }));
@@ -33,6 +34,11 @@ describe("Firebase の旅行 API", () => {
     mocks.orderBy.mockReturnValue("start-date-order");
     mocks.query.mockReturnValue("ordered-trips-query");
     mocks.serverTimestamp.mockReturnValue("server-timestamp");
+    mocks.writeBatch.mockReturnValue({
+      delete: vi.fn(),
+      commit: vi.fn().mockResolvedValue(undefined),
+    });
+    mocks.getDocs.mockResolvedValue({ docs: [] });
   });
 
   afterEach(() => {

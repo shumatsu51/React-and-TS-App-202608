@@ -124,7 +124,7 @@ describe("ExpenseList", () => {
     fireEvent.click(screen.getByRole("button", { name: "OK" }));
 
     await waitFor(() => expect(screen.queryByText("新幹線往復")).not.toBeInTheDocument());
-    expect(expensesApi.deleteTripExpense).toHaveBeenCalledWith(1);
+    expect(expensesApi.deleteTripExpense).toHaveBeenCalledWith(10, 1);
   });
 
   it("予算の更新に失敗した場合はエラーを表示する", async () => {
