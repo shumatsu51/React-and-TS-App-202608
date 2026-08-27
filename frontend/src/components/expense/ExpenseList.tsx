@@ -78,10 +78,10 @@ export const ExpenseList = ({ tripId }: Props) => {
     }
   };
 
-  const handleUpdate = async (expenseId: number, input: TripExpenseInput) => {
+  const handleUpdate = async (expenseId: TripId, input: TripExpenseInput) => {
     try {
       setActionError(null);
-      await updateTripExpense(expenseId, input);
+      await updateTripExpense(tripId, expenseId, input);
       await refreshExpenses();
       return true;
     } catch (error) {
@@ -97,7 +97,7 @@ export const ExpenseList = ({ tripId }: Props) => {
     try {
       setIsDeleting(true);
       setActionError(null);
-      await deleteTripExpense(expenseToDelete.id);
+      await deleteTripExpense(tripId, expenseToDelete.id);
       await refreshExpenses();
       setExpenseToDelete(null);
     } catch (error) {
