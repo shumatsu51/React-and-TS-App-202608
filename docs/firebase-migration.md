@@ -26,8 +26,8 @@ graph LR
 | 0 | 移行準備：現行動作の基準確認、対象資産とデータ方針の確定 | 完了 |
 | 1 | Firebase プロジェクト、Auth、Firestore、Hosting、Emulator の土台を追加 | 完了 |
 | 2 | Firestore データモデル、Security Rules、Rules テストを追加 | 完了 |
-| 3 | JWT Cookie 認証を Firebase Authentication に移行 | 進行中 |
-| 4 | 旅行 CRUD を Firestore SDK に移行 | 未着手 |
+| 3 | JWT Cookie 認証を Firebase Authentication に移行 | 完了 |
+| 4 | 旅行 CRUD を Firestore SDK に移行 | 進行中 |
 | 5 | 場所・旅程・支出・予算を Firestore SDK に移行 | 未着手 |
 | 6 | Hosting 公開、スマートフォン検証、不要資産の整理、ドキュメント更新 | 未着手 |
 
@@ -170,3 +170,21 @@ npm run dev
 この状態では、新規登録・ログイン・ログアウトと `users/{uid}` 作成を確認できる。旅行データの API はまだ Hono + MySQL のままで、Firebase のログイン情報を受け取らない。そのため、Firebase モードで旅行 CRUD を実用するのは段階 4・5 の完了後とする。確認後は `VITE_AUTH_PROVIDER=local` に戻す。
 
 Vite をホスト側で直接起動してローカル API を使う場合、`/api` は既定で `http://localhost:3000` へ転送される。Docker Compose 内では `http://backend:3000` を使用する。`backend` は Docker ネットワーク内のサービス名なので、ホスト側の `npm run dev` からは名前解決できない。
+
+## 段階 4：旅行 CRUD の Firestore 移行
+
+- `frontend/src/api/trips.ts` を認証プロバイダに応じて切り替える API 層に変更した。`local` モードは既存の Hono API を呼び、`firebase` モードは `users/{uid}/trips/{tripId}` を直接操作する。
+- 一覧は `startDate` 昇順で取得する。旅行の作成時には Rules が必須とする `budgetAmount: null`、`createdAt`、`updatedAt` を含める。更新時は `updatedAt` を Firestore のサーバー時刻で更新する。
+- Firestore の自動生成 ID に対応するため、旅行 ID は文字列・数値のどちらも受け入れる型にした。ローカルモードの数値 ID は従来どおり動作する。
+- Firebase モードの旅行詳細では、段階 5 で移行する行きたい場所・旅程・費用を呼び出さない。旅行基本情報の CRUD だけを先に実用可能にする。
+
+### 実プロジェクトでの確認項目
+
+`frontend/.env` を Firebase モードにして Vite を再起動後、次を順に確認する。
+
+1. 旅行一覧が表示される（初回は空状態）。
+2. 旅行を作成し、Firestore の `users/{UID}/trips/{tripId}` に文書が作成される。
+3. 作成した旅行の詳細表示と編集ができる。
+4. 旅行を削除すると一覧から消え、Firestore の旅行文書も削除される。
+
+この段階では旅行に子コレクションをまだ作成しないため、旅行削除は親文書だけを削除する。子コレクションを含めた batch delete は段階 5 で実装する。
