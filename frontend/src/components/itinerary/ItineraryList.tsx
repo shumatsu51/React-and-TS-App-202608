@@ -20,6 +20,7 @@ type Props = {
   tripId: TripId;
   tripStartDate: string;
   tripEndDate: string;
+  placesVersion?: number;
 };
 
 const getTripDates = (startDate: string, endDate: string) => {
@@ -52,10 +53,37 @@ const sortItems = (items: ItineraryItem[]) =>
     (first, second) =>
       first.scheduled_date.localeCompare(second.scheduled_date) ||
       first.sort_order - second.sort_order ||
-      first.id - second.id
+      String(first.id).localeCompare(String(second.id))
   );
 
-export const ItineraryList = ({ tripId, tripStartDate, tripEndDate }: Props) => {
+const hasTimeOverlap = (
+  items: ItineraryItem[],
+  input: ItineraryItemInput,
+  excludedItemId?: TripId
+) => {
+  const inputStartTime = input.start_time;
+  const inputEndTime = input.end_time;
+  if (!inputStartTime || !inputEndTime) return false;
+
+  return items.some((item) => {
+    if (
+      item.id === excludedItemId ||
+      item.scheduled_date !== input.scheduled_date ||
+      !item.start_time ||
+      !item.end_time
+    ) {
+      return false;
+    }
+
+    const startTime = inputStartTime.slice(0, 5);
+    const endTime = inputEndTime.slice(0, 5);
+    const itemStartTime = item.start_time.slice(0, 5);
+    const itemEndTime = item.end_time.slice(0, 5);
+    return startTime < itemEndTime && itemStartTime < endTime;
+  });
+};
+
+export const ItineraryList = ({ tripId, tripStartDate, tripEndDate, placesVersion = 0 }: Props) => {
   const [items, setItems] = useState<ItineraryItem[]>([]);
   const [places, setPlaces] = useState<TripPlace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,7 +114,7 @@ export const ItineraryList = ({ tripId, tripStartDate, tripEndDate }: Props) => 
     // Fetch updates state after the request resolves; this function is also reused by retry.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchItems();
-  }, [fetchItems]);
+  }, [fetchItems, placesVersion]);
 
   const groupedItems = useMemo(() => {
     const byDate = new Map(items.map((item) => [item.scheduled_date, [] as ItineraryItem[]]));
@@ -95,6 +123,11 @@ export const ItineraryList = ({ tripId, tripStartDate, tripEndDate }: Props) => 
   }, [items]);
 
   const handleCreate = async (input: ItineraryItemInput) => {
+    if (hasTimeOverlap(items, input)) {
+      setActionError("同じ時間帯の旅程があります。時刻を変更してください。");
+      return false;
+    }
+
     try {
       setActionError(null);
       const item = await createItineraryItem(tripId, input);
@@ -108,10 +141,15 @@ export const ItineraryList = ({ tripId, tripStartDate, tripEndDate }: Props) => 
     }
   };
 
-  const handleUpdate = async (id: number, input: ItineraryItemInput) => {
+  const handleUpdate = async (id: TripId, input: ItineraryItemInput) => {
+    if (hasTimeOverlap(items, input, id)) {
+      setActionError("同じ時間帯の旅程があります。時刻を変更してください。");
+      return false;
+    }
+
     try {
       setActionError(null);
-      const updatedItem = await updateItineraryItem(id, input);
+      const updatedItem = await updateItineraryItem(tripId, id, input);
       setItems((previous) =>
         sortItems(previous.map((item) => (item.id === id ? updatedItem : item)))
       );
@@ -129,7 +167,7 @@ export const ItineraryList = ({ tripId, tripStartDate, tripEndDate }: Props) => 
     try {
       setIsDeleting(true);
       setActionError(null);
-      await deleteItineraryItem(itemToDelete.id);
+      await deleteItineraryItem(tripId, itemToDelete.id);
       setItems((previous) => previous.filter((item) => item.id !== itemToDelete.id));
       setItemToDelete(null);
     } catch (error) {
@@ -140,7 +178,7 @@ export const ItineraryList = ({ tripId, tripStartDate, tripEndDate }: Props) => 
     }
   };
 
-  const handleMove = async (scheduledDate: string, itemId: number, direction: -1 | 1) => {
+  const handleMove = async (scheduledDate: string, itemId: TripId, direction: -1 | 1) => {
     const dayItems = sortItems(items.filter((item) => item.scheduled_date === scheduledDate));
     const currentIndex = dayItems.findIndex((item) => item.id === itemId);
     const targetIndex = currentIndex + direction;
