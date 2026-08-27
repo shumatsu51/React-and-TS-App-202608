@@ -11,12 +11,13 @@ import {
 } from "../../api/itineraryItems";
 import { getTripPlaces } from "../../api/tripPlaces";
 import type { ItineraryItem, ItineraryItemInput } from "../../types/itineraryItem";
+import type { TripId } from "../../types/trip";
 import type { TripPlace } from "../../types/tripPlace";
 import { ItineraryItemForm } from "./ItineraryItemForm";
 import { ItineraryItem as ItineraryItemView } from "./ItineraryItem";
 
 type Props = {
-  tripId: number;
+  tripId: TripId;
   tripStartDate: string;
   tripEndDate: string;
 };

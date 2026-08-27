@@ -1,4 +1,5 @@
 import type { TripExpense, TripExpenseInput, TripExpenseSummary } from "../types/tripExpense";
+import type { TripId } from "../types/trip";
 
 const BASE_URL = "/api/trip-expenses";
 
@@ -11,7 +12,7 @@ const getErrorMessage = async (response: Response, fallback: string) => {
   }
 };
 
-export const getTripExpenses = async (tripId: number): Promise<TripExpenseSummary> => {
+export const getTripExpenses = async (tripId: TripId): Promise<TripExpenseSummary> => {
   const response = await fetch(`${BASE_URL}/trips/${tripId}`, { credentials: "include" });
   if (!response.ok)
     throw new Error(await getErrorMessage(response, "費用情報の取得に失敗しました"));
@@ -19,7 +20,7 @@ export const getTripExpenses = async (tripId: number): Promise<TripExpenseSummar
 };
 
 export const createTripExpense = async (
-  tripId: number,
+  tripId: TripId,
   input: TripExpenseInput
 ): Promise<TripExpense> => {
   const response = await fetch(`${BASE_URL}/trips/${tripId}`, {

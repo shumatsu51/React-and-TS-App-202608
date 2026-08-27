@@ -8,6 +8,7 @@ import {
   updateTripExpense,
 } from "../../api/tripExpenses";
 import type { TripExpense, TripExpenseInput, TripExpenseSummary } from "../../types/tripExpense";
+import type { TripId } from "../../types/trip";
 import { ConfirmModal } from "../common/ConfirmModal";
 import { ErrorState } from "../common/ErrorState";
 import { ExpenseForm } from "./ExpenseForm";
@@ -15,7 +16,7 @@ import { ExpenseItem } from "./ExpenseItem";
 import { ExpenseSummary } from "./ExpenseSummary";
 
 type Props = {
-  tripId: number;
+  tripId: TripId;
 };
 
 export const ExpenseList = ({ tripId }: Props) => {

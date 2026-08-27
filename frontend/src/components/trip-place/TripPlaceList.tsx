@@ -9,9 +9,10 @@ import {
 } from "../../api/tripPlaces";
 import { AddTripPlaceForm } from "./AddTripPlaceForm";
 import { TripPlaceItem } from "./TripPlaceItem";
+import type { TripId } from "../../types/trip";
 
 type Props = {
-  tripId: number;
+  tripId: TripId;
 };
 
 export const TripPlaceList = ({ tripId }: Props) => {

@@ -1,8 +1,9 @@
+import type { TripId } from "../types/trip";
 import type { TripPlace } from "../types/tripPlace";
 
 const BASE_URL = "/api/trip-places";
 
-export const getTripPlaces = async (tripId: number): Promise<TripPlace[]> => {
+export const getTripPlaces = async (tripId: TripId): Promise<TripPlace[]> => {
   const response = await fetch(`${BASE_URL}/trips/${tripId}`, {
     credentials: "include",
   });
@@ -14,7 +15,7 @@ export const getTripPlaces = async (tripId: number): Promise<TripPlace[]> => {
   return response.json() as Promise<TripPlace[]>;
 };
 
-export const createTripPlace = async (tripId: number, name: string): Promise<TripPlace> => {
+export const createTripPlace = async (tripId: TripId, name: string): Promise<TripPlace> => {
   const response = await fetch(`${BASE_URL}/trips/${tripId}`, {
     method: "POST",
     headers: {

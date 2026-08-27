@@ -1,4 +1,5 @@
 import type { ItineraryItem, ItineraryItemInput } from "../types/itineraryItem";
+import type { TripId } from "../types/trip";
 
 const BASE_URL = "/api/itinerary-items";
 
@@ -11,14 +12,14 @@ const getErrorMessage = async (response: Response, fallback: string) => {
   }
 };
 
-export const getItineraryItems = async (tripId: number): Promise<ItineraryItem[]> => {
+export const getItineraryItems = async (tripId: TripId): Promise<ItineraryItem[]> => {
   const response = await fetch(`${BASE_URL}/trips/${tripId}`, { credentials: "include" });
   if (!response.ok) throw new Error(await getErrorMessage(response, "旅程の取得に失敗しました"));
   return response.json() as Promise<ItineraryItem[]>;
 };
 
 export const createItineraryItem = async (
-  tripId: number,
+  tripId: TripId,
   input: ItineraryItemInput
 ): Promise<ItineraryItem> => {
   const response = await fetch(`${BASE_URL}/trips/${tripId}`, {
@@ -54,7 +55,7 @@ export const deleteItineraryItem = async (itemId: number): Promise<void> => {
 };
 
 export const reorderItineraryItems = async (
-  tripId: number,
+  tripId: TripId,
   scheduledDate: string,
   itemIds: number[]
 ): Promise<void> => {
