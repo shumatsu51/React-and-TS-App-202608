@@ -1,4 +1,6 @@
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react";
+import { createTrip, updateTrip } from "../../api/trips";
+import type { TripId } from "../../types/trip";
 
 type TripFormData = {
   title: string;
@@ -11,7 +13,7 @@ type TripFormProps = {
   onSuccess: () => void;
   initialValues?: TripFormData;
   mode?: "create" | "edit";
-  tripId?: number;
+  tripId?: TripId;
   onDirtyChange?: (isDirty: boolean) => void;
 };
 
@@ -133,34 +135,15 @@ export const TripForm = ({
       setIsSubmitting(true);
       setSubmitError(null);
 
-      const isEditMode = mode === "edit";
+      const input = { title, startDate, endDate, description };
 
-      const response = await fetch(isEditMode ? `/api/trips/${tripId}` : "/api/trips", {
-        method: isEditMode ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          title,
-          start_date: startDate,
-          end_date: endDate,
-          description,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-
-        console.error("API error:", {
-          status: response.status,
-          data: errorData,
-        });
-
-        throw new Error(
-          errorData.message ??
-            (isEditMode ? "旅行情報の更新に失敗しました" : "旅行情報の登録に失敗しました")
-        );
+      if (mode === "edit") {
+        if (tripId === undefined) {
+          throw new Error("旅行IDを取得できませんでした");
+        }
+        await updateTrip(tripId, input);
+      } else {
+        await createTrip(input);
       }
 
       setSavedValues({ title, startDate, endDate, description });

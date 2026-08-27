@@ -26,10 +26,10 @@ graph LR
 | 0 | 移行準備：現行動作の基準確認、対象資産とデータ方針の確定 | 完了 |
 | 1 | Firebase プロジェクト、Auth、Firestore、Hosting、Emulator の土台を追加 | 完了 |
 | 2 | Firestore データモデル、Security Rules、Rules テストを追加 | 完了 |
-| 3 | JWT Cookie 認証を Firebase Authentication に移行 | 進行中 |
-| 4 | 旅行 CRUD を Firestore SDK に移行 | 未着手 |
-| 5 | 場所・旅程・支出・予算を Firestore SDK に移行 | 未着手 |
-| 6 | Hosting 公開、スマートフォン検証、不要資産の整理、ドキュメント更新 | 未着手 |
+| 3 | JWT Cookie 認証を Firebase Authentication に移行 | 完了 |
+| 4 | 旅行 CRUD を Firestore SDK に移行 | 完了 |
+| 5 | 場所・旅程・支出・予算を Firestore SDK に移行 | 進行中（実プロジェクトの最終確認待ち） |
+| 6 | Hosting 公開、スマートフォン検証、不要資産の整理、ドキュメント更新 | 進行中 |
 
 ## 段階 0：移行準備
 
@@ -167,6 +167,91 @@ cd frontend
 npm run dev
 ```
 
-この状態では、新規登録・ログイン・ログアウトと `users/{uid}` 作成を確認できる。旅行データの API はまだ Hono + MySQL のままで、Firebase のログイン情報を受け取らない。そのため、Firebase モードで旅行 CRUD を実用するのは段階 4・5 の完了後とする。確認後は `VITE_AUTH_PROVIDER=local` に戻す。
+この状態では、新規登録・ログイン・ログアウトと `users/{uid}` 作成を確認できる。移行初期の確認後は `VITE_AUTH_PROVIDER=local` に戻す。
 
 Vite をホスト側で直接起動してローカル API を使う場合、`/api` は既定で `http://localhost:3000` へ転送される。Docker Compose 内では `http://backend:3000` を使用する。`backend` は Docker ネットワーク内のサービス名なので、ホスト側の `npm run dev` からは名前解決できない。
+
+## 段階 4：旅行 CRUD の Firestore 移行
+
+- `frontend/src/api/trips.ts` を認証プロバイダに応じて切り替える API 層に変更した。`local` モードは既存の Hono API を呼び、`firebase` モードは `users/{uid}/trips/{tripId}` を直接操作する。
+- 一覧は `startDate` 昇順で取得する。旅行の作成時には Rules が必須とする `budgetAmount: null`、`createdAt`、`updatedAt` を含める。更新時は `updatedAt` を Firestore のサーバー時刻で更新する。
+- Firestore の自動生成 ID に対応するため、旅行 ID は文字列・数値のどちらも受け入れる型にした。ローカルモードの数値 ID は従来どおり動作する。
+- 段階 4 では Firebase モードで行きたい場所・旅程・費用を呼び出さず、旅行基本情報の CRUD だけを先に移行した。段階 5 でこの制限は解除済みである。
+
+### 実プロジェクトでの確認項目
+
+`frontend/.env` を Firebase モードにして Vite を再起動後、次を順に確認する。
+
+1. 旅行一覧が表示される（初回は空状態）。
+2. 旅行を作成し、Firestore の `users/{UID}/trips/{tripId}` に文書が作成される。
+3. 作成した旅行の詳細表示と編集ができる。
+4. 旅行を削除すると一覧から消え、Firestore の旅行文書も削除される。
+
+当時は旅行に子コレクションをまだ作成していなかったため、旅行削除は親文書だけを削除していた。段階 5 で子コレクションを含めた batch delete に置き換える。
+
+## 段階 5：場所・旅程・費用・予算の Firestore 移行
+
+- `places`、`itineraryItems`、`expenses` をそれぞれ `users/{uid}/trips/{tripId}` のサブコレクションとして読み書きする API を追加した。`local` モードでは既存 Hono API を引き続き使用する。
+- 場所を削除すると、その場所を参照する旅程の `tripPlaceId` を同一 batch write で `null` に更新してから場所を削除する。
+- 旅行を削除すると、場所・旅程・費用の各サブコレクションを削除してから親旅行文書を削除する。Firestore は親文書を削除してもサブコレクションを自動削除しないため、この処理が必要になる。
+- 費用一覧では親旅行の `budgetAmount` と費用サブコレクションから、総額・支払済み額・残額・カテゴリ別集計をクライアント側で生成する。
+- 旅行期間を短縮する更新時は、既存の旅程が新しい期間内に残ることを保存前に検証する。
+- 同じ日の開始・終了時刻が重なる旅程は、作成・編集前にクライアント側で拒否する。終了時刻と次の開始時刻が同じ場合は重複として扱わない。
+
+### 実プロジェクトでの確認項目
+
+1. 場所の追加、訪問済み切替、削除ができる。
+2. 場所を選択した旅程を作成し、場所を削除しても旅程が残り、選択だけ解除される。
+3. 旅程の追加、編集、削除、同じ日内での上下移動ができる。
+4. 予算の設定・解除、費用の追加・編集・削除、カテゴリ別集計ができる。
+5. 旅行を削除後、Firestore Console で当該旅行配下の `places`、`itineraryItems`、`expenses` が残っていないことを確認する。
+
+## 段階 6：Hosting 公開・検証・文書整理
+
+### Firebase Hosting への公開
+
+Firebase モードの設定値を含む `frontend/.env` を用意した状態で、リポジトリのルートから次を実行する。
+
+```bash
+# 初回のみ（または認証が切れた場合）
+npm run firebase -- login
+
+# Firestore の Rules / Indexes と Hosting をまとめて公開する
+npm run firebase -- deploy --only firestore,hosting
+```
+
+Hosting だけを再公開する場合は、次のコマンドを使う。`firebase.json` の `predeploy` により、公開前に `frontend` の本番ビルドが必ず実行される。
+
+```bash
+npm run firebase -- deploy --only hosting
+```
+
+公開後の URL は CLI の `Hosting URL` に表示される。Firebase Hosting は SPA fallback を設定済みのため、旅行詳細などの画面を直接開いても `index.html` が返される。
+
+2026-08-27 に初回公開を完了した。公開 URL は <https://triply-73809.web.app> である。
+
+### 公開前後の確認
+
+```bash
+# フロントエンドの単体・コンポーネントテスト
+cd frontend && npm test
+
+# Firestore Security Rules の Emulator テスト（リポジトリのルートで実行）
+cd .. && npm run test:firestore-rules
+
+# 型検査、プロダクションビルド、静的解析
+cd frontend && npm run build && npm run lint
+```
+
+公開後は PC ブラウザで、Firebase Authentication の新規登録・ログイン・ログアウト、旅行／場所／旅程／費用／予算の CRUD、ログインしていない状態での画面遷移、旅行詳細 URL の直接表示を確認する。
+
+### スマートフォン実機確認（保留）
+
+スマートフォンを利用できる環境になったら、Hosting URL を HTTPS で開き、次を確認する。
+
+1. 新規登録、ログイン、ログアウトができる。
+2. 旅行・場所・旅程・費用・予算を作成、更新、削除できる。
+3. 画面幅が狭い状態でもフォーム、一覧、エラーメッセージが操作・閲覧できる。
+4. 直接 URL を開いた場合と、再読み込みした場合に旅行詳細画面が表示される。
+
+この確認が終わるまで、Docker Compose と AWS 関連資産は削除しない。

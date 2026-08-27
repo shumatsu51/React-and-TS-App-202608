@@ -27,6 +27,7 @@ export default function TripDetailPage() {
   const [isDeleteCompleteOpen, setIsDeleteCompleteOpen] = useState(false);
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [placesVersion, setPlacesVersion] = useState(0);
 
   const fetchTrip = useCallback(async () => {
     if (!id) {
@@ -37,7 +38,7 @@ export default function TripDetailPage() {
     }
 
     try {
-      const data = await getTrip(Number(id));
+      const data = await getTrip(id);
       setTrip(data);
     } catch (error) {
       console.error(error);
@@ -160,11 +161,15 @@ export default function TripDetailPage() {
 
             <p className="mt-4">{trip.description || "説明はありません"}</p>
           </div>
-          {trip && <TripPlaceList tripId={trip.id} />}
+          <TripPlaceList
+            tripId={trip.id}
+            onPlacesChanged={() => setPlacesVersion((version) => version + 1)}
+          />
           <ItineraryList
             tripId={trip.id}
             tripStartDate={trip.start_date}
             tripEndDate={trip.end_date}
+            placesVersion={placesVersion}
           />
           <ExpenseList tripId={trip.id} />
         </div>

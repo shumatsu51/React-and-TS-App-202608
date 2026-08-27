@@ -7,10 +7,11 @@ import {
   type TripExpenseInput,
 } from "../../types/tripExpense";
 import { ExpenseForm } from "./ExpenseForm";
+import type { TripId } from "../../types/trip";
 
 type Props = {
   expense: TripExpense;
-  onUpdate: (id: number, input: TripExpenseInput) => Promise<boolean>;
+  onUpdate: (id: TripId, input: TripExpenseInput) => Promise<boolean>;
   onDelete: (expense: TripExpense) => void;
 };
 

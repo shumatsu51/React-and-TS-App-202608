@@ -1,3 +1,5 @@
+import type { TripId } from "./trip";
+
 export const expenseCategories = [
   "transport",
   "accommodation",
@@ -26,8 +28,8 @@ export const paymentStatusLabels: Record<PaymentStatus, string> = {
 };
 
 export type TripExpense = {
-  id: number;
-  trip_id: number;
+  id: TripId;
+  trip_id: TripId;
   description: string;
   category: ExpenseCategory;
   amount: number;

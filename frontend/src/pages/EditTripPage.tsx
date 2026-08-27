@@ -31,7 +31,7 @@ export default function EditTripPage() {
     }
 
     try {
-      const data = await getTrip(Number(id));
+      const data = await getTrip(id);
 
       setTrip(data);
     } catch (error) {

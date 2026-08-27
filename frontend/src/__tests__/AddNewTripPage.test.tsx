@@ -4,6 +4,9 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import AddNewTripPage from "../pages/AddNewTripPage";
 
+const tripsApi = vi.hoisted(() => ({ createTrip: vi.fn(), updateTrip: vi.fn() }));
+vi.mock("../api/trips", () => tripsApi);
+
 describe("AddNewTripPage", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -27,7 +30,7 @@ describe("AddNewTripPage", () => {
   });
 
   it("旅行作成に成功すると完了モーダルを表示する", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+    tripsApi.createTrip.mockResolvedValueOnce(undefined);
     const router = createMemoryRouter(
       [
         { path: "/trips/new", element: <AddNewTripPage /> },
@@ -54,8 +57,6 @@ describe("AddNewTripPage", () => {
 
     expect(screen.getByRole("heading", { level: 1, name: "旅行を作成" })).toBeInTheDocument();
     expect(screen.getByText("新しい旅行の情報を登録します。")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1 }).closest("div.sticky")).toHaveClass(
-      "top-24"
-    );
+    expect(screen.getByRole("heading", { level: 1 }).closest("div.sticky")).toHaveClass("top-24");
   });
 });

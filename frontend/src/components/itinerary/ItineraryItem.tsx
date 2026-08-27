@@ -5,6 +5,7 @@ import type {
   ItineraryItemInput,
 } from "../../types/itineraryItem";
 import type { TripPlace } from "../../types/tripPlace";
+import type { TripId } from "../../types/trip";
 import { ItineraryItemForm } from "./ItineraryItemForm";
 
 type Props = {
@@ -12,7 +13,7 @@ type Props = {
   tripStartDate: string;
   tripEndDate: string;
   places: TripPlace[];
-  onUpdate: (id: number, input: ItineraryItemInput) => Promise<boolean>;
+  onUpdate: (id: TripId, input: ItineraryItemInput) => Promise<boolean>;
   onDelete: (item: ItineraryItemType) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;

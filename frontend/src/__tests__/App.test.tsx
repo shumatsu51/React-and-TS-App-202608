@@ -7,7 +7,7 @@ const { mockLogout } = vi.hoisted(() => ({ mockLogout: vi.fn() }));
 
 vi.mock("../context/useAuth", () => ({
   useAuth: () => ({
-    user: { id: 1, email: "test@example.com", created_at: "2026-01-01 00:00:00" },
+    user: { id: "1", email: "test@example.com", created_at: "2026-01-01 00:00:00" },
     isLoading: false,
     login: vi.fn(),
     signup: vi.fn(),

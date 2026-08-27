@@ -8,6 +8,7 @@ import {
   updateTripExpense,
 } from "../../api/tripExpenses";
 import type { TripExpense, TripExpenseInput, TripExpenseSummary } from "../../types/tripExpense";
+import type { TripId } from "../../types/trip";
 import { ConfirmModal } from "../common/ConfirmModal";
 import { ErrorState } from "../common/ErrorState";
 import { ExpenseForm } from "./ExpenseForm";
@@ -15,7 +16,7 @@ import { ExpenseItem } from "./ExpenseItem";
 import { ExpenseSummary } from "./ExpenseSummary";
 
 type Props = {
-  tripId: number;
+  tripId: TripId;
 };
 
 export const ExpenseList = ({ tripId }: Props) => {
@@ -77,10 +78,10 @@ export const ExpenseList = ({ tripId }: Props) => {
     }
   };
 
-  const handleUpdate = async (expenseId: number, input: TripExpenseInput) => {
+  const handleUpdate = async (expenseId: TripId, input: TripExpenseInput) => {
     try {
       setActionError(null);
-      await updateTripExpense(expenseId, input);
+      await updateTripExpense(tripId, expenseId, input);
       await refreshExpenses();
       return true;
     } catch (error) {
@@ -96,7 +97,7 @@ export const ExpenseList = ({ tripId }: Props) => {
     try {
       setIsDeleting(true);
       setActionError(null);
-      await deleteTripExpense(expenseToDelete.id);
+      await deleteTripExpense(tripId, expenseToDelete.id);
       await refreshExpenses();
       setExpenseToDelete(null);
     } catch (error) {

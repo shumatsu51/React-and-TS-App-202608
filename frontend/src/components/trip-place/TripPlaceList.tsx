@@ -9,12 +9,14 @@ import {
 } from "../../api/tripPlaces";
 import { AddTripPlaceForm } from "./AddTripPlaceForm";
 import { TripPlaceItem } from "./TripPlaceItem";
+import type { TripId } from "../../types/trip";
 
 type Props = {
-  tripId: number;
+  tripId: TripId;
+  onPlacesChanged?: () => void;
 };
 
-export const TripPlaceList = ({ tripId }: Props) => {
+export const TripPlaceList = ({ tripId, onPlacesChanged }: Props) => {
   const [places, setPlaces] = useState<TripPlace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +48,7 @@ export const TripPlaceList = ({ tripId }: Props) => {
       const newPlace = await createTripPlace(tripId, name);
 
       setPlaces((prev) => [...prev, newPlace]);
+      onPlacesChanged?.();
       return true;
     } catch (error) {
       console.error(error);
@@ -54,10 +57,10 @@ export const TripPlaceList = ({ tripId }: Props) => {
     }
   };
 
-  const handleToggle = async (id: number, isVisited: boolean) => {
+  const handleToggle = async (id: TripId, isVisited: boolean) => {
     try {
       setOperationError(null);
-      await updateTripPlace(id, isVisited);
+      await updateTripPlace(tripId, id, isVisited);
 
       setPlaces((prev) =>
         prev.map((place) => (place.id === id ? { ...place, is_visited: isVisited } : place))
@@ -68,12 +71,13 @@ export const TripPlaceList = ({ tripId }: Props) => {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: TripId) => {
     try {
       setOperationError(null);
-      await deleteTripPlace(id);
+      await deleteTripPlace(tripId, id);
 
       setPlaces((prev) => prev.filter((place) => place.id !== id));
+      onPlacesChanged?.();
     } catch (error) {
       console.error(error);
       setOperationError("場所を削除できませんでした。もう一度お試しください。");
