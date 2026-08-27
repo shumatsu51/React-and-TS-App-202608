@@ -13,8 +13,6 @@ import { getTripStatus } from "../utils/tripStatus";
 import { getTripDuration } from "../utils/tripDuration";
 import { PageHeader } from "../components/common/PageHeader";
 
-const usesFirebaseTrips = import.meta.env.VITE_AUTH_PROVIDER === "firebase";
-
 export default function TripDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -29,6 +27,7 @@ export default function TripDetailPage() {
   const [isDeleteCompleteOpen, setIsDeleteCompleteOpen] = useState(false);
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [placesVersion, setPlacesVersion] = useState(0);
 
   const fetchTrip = useCallback(async () => {
     if (!id) {
@@ -162,21 +161,17 @@ export default function TripDetailPage() {
 
             <p className="mt-4">{trip.description || "説明はありません"}</p>
           </div>
-          {usesFirebaseTrips ? (
-            <p className="mt-8 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-700">
-              行きたい場所・旅程・費用は次の移行段階で Firestore に対応します。
-            </p>
-          ) : (
-            <>
-              <TripPlaceList tripId={trip.id} />
-              <ItineraryList
-                tripId={trip.id}
-                tripStartDate={trip.start_date}
-                tripEndDate={trip.end_date}
-              />
-              <ExpenseList tripId={trip.id} />
-            </>
-          )}
+          <TripPlaceList
+            tripId={trip.id}
+            onPlacesChanged={() => setPlacesVersion((version) => version + 1)}
+          />
+          <ItineraryList
+            tripId={trip.id}
+            tripStartDate={trip.start_date}
+            tripEndDate={trip.end_date}
+            placesVersion={placesVersion}
+          />
+          <ExpenseList tripId={trip.id} />
         </div>
       </div>
 
