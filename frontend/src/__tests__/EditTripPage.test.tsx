@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
-const tripsApi = vi.hoisted(() => ({ getTrip: vi.fn() }));
+const tripsApi = vi.hoisted(() => ({ getTrip: vi.fn(), updateTrip: vi.fn() }));
 vi.mock("../api/trips", () => tripsApi);
 
 import EditTripPage from "../pages/EditTripPage";
@@ -31,6 +31,7 @@ describe("EditTripPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     tripsApi.getTrip.mockResolvedValue(trip);
+    tripsApi.updateTrip.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -58,7 +59,6 @@ describe("EditTripPage", () => {
   });
 
   it("更新成功後に完了モーダルを表示する", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
     renderPage();
 
     await waitFor(() => expect(screen.getByLabelText(/旅行名/)).toHaveValue("京都旅行"));
@@ -79,14 +79,8 @@ describe("EditTripPage", () => {
   });
 
   it("旅行期間外になる旅程がある場合、APIの409メッセージを表示する", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: false,
-        json: async () => ({
-          message: "旅行期間外になる旅程があります。先に旅程の日付を変更または削除してください",
-        }),
-      })
+    tripsApi.updateTrip.mockRejectedValueOnce(
+      new Error("旅行期間外になる旅程があります。先に旅程の日付を変更または削除してください")
     );
     renderPage();
 
@@ -108,8 +102,6 @@ describe("EditTripPage", () => {
 
     await screen.findByRole("heading", { level: 1, name: "旅行を編集" });
     expect(screen.getByText("登録した旅行の情報を変更します。")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1 }).closest("div.sticky")).toHaveClass(
-      "top-24"
-    );
+    expect(screen.getByRole("heading", { level: 1 }).closest("div.sticky")).toHaveClass("top-24");
   });
 });

@@ -3,6 +3,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { TripForm } from "../components/trip/TripForm";
 
+const tripsApi = vi.hoisted(() => ({ createTrip: vi.fn(), updateTrip: vi.fn() }));
+vi.mock("../api/trips", () => tripsApi);
+
 const initialValues = {
   title: "北海道旅行",
   startDate: "2026-08-10",
@@ -11,7 +14,7 @@ const initialValues = {
 };
 
 afterEach(() => {
-  vi.unstubAllGlobals();
+  vi.clearAllMocks();
 });
 
 describe("TripForm", () => {
@@ -49,15 +52,13 @@ describe("TripForm", () => {
   });
 
   it("編集時は変更がない間、保存ボタンを無効化して更新リクエストを送らない", () => {
-    const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
     render(<TripForm initialValues={initialValues} mode="edit" tripId={1} onSuccess={vi.fn()} />);
 
     const saveButton = screen.getByRole("button", { name: "変更なし" });
     expect(saveButton).toBeDisabled();
     fireEvent.click(saveButton);
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(tripsApi.updateTrip).not.toHaveBeenCalled();
   });
 
   it("入力エラーを対象の入力欄に関連付ける", () => {
@@ -72,14 +73,8 @@ describe("TripForm", () => {
   });
 
   it("旅行期間外の旅程があるため更新できない場合、APIメッセージを表示する", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: false,
-        json: async () => ({
-          message: "旅行期間外になる旅程があります。先に旅程の日付を変更または削除してください",
-        }),
-      })
+    tripsApi.updateTrip.mockRejectedValueOnce(
+      new Error("旅行期間外になる旅程があります。先に旅程の日付を変更または削除してください")
     );
     render(<TripForm initialValues={initialValues} mode="edit" tripId={1} onSuccess={vi.fn()} />);
 
