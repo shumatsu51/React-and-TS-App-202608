@@ -153,6 +153,8 @@ VITE_AUTH_PROVIDER=local
 VITE_USE_FIREBASE_EMULATORS=false
 ```
 
+`frontend/.env.example` は雛形であり、Vite は読み込まない。設定を切り替える場合は必ず Git 管理外の `frontend/.env` を変更して、Vite を再起動する。
+
 Firebase 認証を実プロジェクトで確認する場合だけ、一時的に次のように変更してから Vite を起動する。
 
 ```dotenv
@@ -166,3 +168,5 @@ npm run dev
 ```
 
 この状態では、新規登録・ログイン・ログアウトと `users/{uid}` 作成を確認できる。旅行データの API はまだ Hono + MySQL のままで、Firebase のログイン情報を受け取らない。そのため、Firebase モードで旅行 CRUD を実用するのは段階 4・5 の完了後とする。確認後は `VITE_AUTH_PROVIDER=local` に戻す。
+
+Vite をホスト側で直接起動してローカル API を使う場合、`/api` は既定で `http://localhost:3000` へ転送される。Docker Compose 内では `http://backend:3000` を使用する。`backend` は Docker ネットワーク内のサービス名なので、ホスト側の `npm run dev` からは名前解決できない。
